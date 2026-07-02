@@ -59,6 +59,11 @@ export function BattleScreen() {
   }, [playerBattleCards, enemyBattleCards, battleTurn, phase]);
 
   const currentCard = actionablePlayerCards[currentCardIdx];
+  const activeCardId = phase === 'player_turn'
+    ? currentCard?.cardId
+    : phase === 'resolving' && currentLogIdx >= 0 && currentLogIdx < battleLog.length
+      ? battleLog[currentLogIdx].cardId
+      : null;
 
   // Auto-submit if no cards can act (all frozen/stunned)
   useEffect(() => {
@@ -521,6 +526,7 @@ export function BattleScreen() {
               card={card}
               color={getCardColor(card.rarity)}
               isAlive={card.currentHp > 0}
+              isActive={card.cardId === activeCardId}
             />
           ))}
         </div>
@@ -606,7 +612,7 @@ export function BattleScreen() {
               card={card}
               color={getCardColor(card.rarity)}
               isAlive={card.currentHp > 0}
-              isActive={phase === 'player_turn' && card.cardId === currentCard?.cardId}
+              isActive={card.cardId === activeCardId}
             />
           ))}
         </div>
