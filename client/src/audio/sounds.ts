@@ -169,6 +169,7 @@ function createBattleSfx(src: string) {
 let bgmHowl: Howl | null = null;
 let bgmHowlId: number | null = null;
 let bgmVolume = 0.25;
+let bgmHasPlayed = false;
 
 export function getBgmVolume() {
   return bgmVolume;
@@ -188,6 +189,7 @@ function startBgmInternal(src: string, volume?: number) {
       loop: true,
       volume: bgmVolume,
       html5: true,
+      onplay: () => { bgmHasPlayed = true; },
     });
     bgmHowlId = bgmHowl.play();
   } catch {
@@ -197,14 +199,17 @@ function startBgmInternal(src: string, volume?: number) {
 
 export const BGM = {
   start(volume?: number) {
+    bgmHasPlayed = false;
     startBgmInternal('/audio/bgm.ogg', volume);
   },
 
   startBattle(volume?: number) {
+    bgmHasPlayed = false;
     startBgmInternal('/audio/bgm_battle.webm', volume);
   },
 
   switchToMenu(volume?: number) {
+    bgmHasPlayed = false;
     initAudio();
     if (bgmHowl) {
       try { bgmHowl.stop(); } catch {}
@@ -218,6 +223,7 @@ export const BGM = {
         loop: true,
         volume: bgmVolume,
         html5: true,
+        onplay: () => { bgmHasPlayed = true; },
       });
       bgmHowlId = bgmHowl.play();
     } catch {
@@ -226,6 +232,7 @@ export const BGM = {
   },
 
   stop() {
+    bgmHasPlayed = false;
     if (!bgmHowl) return;
     const howl = bgmHowl;
     const id = bgmHowlId;
@@ -252,6 +259,10 @@ export const BGM = {
 
   isPlaying() {
     return bgmHowl !== null && bgmHowlId !== null;
+  },
+
+  hasPlayed() {
+    return bgmHasPlayed;
   },
 
   setVolume(vol: number) {

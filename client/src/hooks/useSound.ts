@@ -5,8 +5,8 @@ export function useSound() {
   const bgmRef = useRef(false);
 
   const ensureBGM = useCallback(() => {
-    if (bgmRef.current && !BGM.isPlaying()) {
-      BGM.start();
+    if (bgmRef.current && !BGM.hasPlayed()) {
+      BGM.start(0.25);
     }
   }, []);
 

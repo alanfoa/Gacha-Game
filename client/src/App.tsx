@@ -10,11 +10,13 @@ import { TeamSelectScreen } from './components/Battle/TeamSelectScreen';
 import { BattleScreen } from './components/Battle/BattleScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Spinner } from './components/UI/Spinner';
+import { useSound } from './hooks/useSound';
 import { BGM } from './audio/sounds';
 
 function App() {
   const { token, user, fetchProfile, fetchCards, loading, error, register } = useGameStore();
   const current = useScreenStore((s) => s.current);
+  const { startBGM } = useSound();
   const [name, setName] = useState('');
   const bgmStarted = useRef(false);
   const autoRegistering = useRef(false);
@@ -34,13 +36,13 @@ function App() {
   useEffect(() => {
     if (user && !bgmStarted.current) {
       bgmStarted.current = true;
-      try { BGM.start(); } catch { /* audio no disponible */ }
+      startBGM(0.25);
     }
     if (!token) {
       bgmStarted.current = false;
       try { BGM.stop(); } catch {}
     }
-  }, [user, token]);
+  }, [user, token, startBGM]);
 
   // Glass shatter transition between screens
   useEffect(() => {
