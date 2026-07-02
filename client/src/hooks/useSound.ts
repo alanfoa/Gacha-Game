@@ -15,7 +15,7 @@ export function useSound() {
     BGM.start(volume);
   }, []);
 
-  const startBattleBGM = useCallback((volume = 0.04) => {
+  const startBattleBGM = useCallback((volume = 0.25) => {
     bgmRef.current = true;
     BGM.startBattle(volume);
   }, []);
@@ -33,7 +33,7 @@ export function useSound() {
     BGM.resume();
   }, []);
 
-  const restartMenuBGM = useCallback((volume = 0.04) => {
+  const restartMenuBGM = useCallback((volume = 0.25) => {
     BGM.start(volume);
   }, []);
 
