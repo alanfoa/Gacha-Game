@@ -1,12 +1,15 @@
-import { cards, getElementMultiplier, type Card, type Element, type Rarity } from '../data/cards.js';
-
-const RARITY_ORDER: Record<Rarity, number> = {
-  COMUN: 0, RARO: 1, EPICO: 2, LEGENDARIO: 3,
-};
+import { cards, getElementMultiplier, RARITY_ORDER, type Card, type Element, type Rarity } from '../data/cards.js';
 
 const REWARD_COINS = [30, 60, 100, 200];
 
 export type ActionType = 'ATTACK' | 'MAGIC' | 'DEFEND' | 'SKILL';
+
+export interface SkillEffect {
+  type: 'NONE' | 'IGNORE_DEF' | 'MAG_DOWN' | 'BLEED' | 'CRIT_BONUS' | 'STUN' | 'HEAL_ALLY' | 'SPD_DOWN' | 'DEF_DOWN' | 'FREEZE' | 'IGNORE_ALL_DEF';
+  value?: number;
+  duration?: number;
+  chance?: number;
+}
 
 export interface Skill {
   id: string;
@@ -14,6 +17,7 @@ export interface Skill {
   type: ActionType;
   power: number;
   description: string;
+  effect?: SkillEffect;
 }
 
 export interface BattleCard {
@@ -21,7 +25,7 @@ export interface BattleCard {
   name: string;
   rarity: Rarity;
   element: Element;
-  stats: { attack: number; defense: number; magic: number; luck: number };
+  stats: { attack: number; defense: number; magic: number; luck: number; speed: number };
   currentHp: number;
   maxHp: number;
   isDefending: boolean;
@@ -35,36 +39,45 @@ export interface BattleAction {
   skillId?: string;
 }
 
+export interface BattleLogAction {
+  cardId: string;
+  targetId: string;
+  damage: number;
+  critical: boolean;
+  action: ActionType;
+  message: string;
+}
+
 export interface BattleResult {
   turn: number;
-  actions: { cardId: string; targetId: string; damage: number; critical: boolean; action: ActionType; message: string }[];
+  actions: BattleLogAction[];
   playerCards: BattleCard[];
   enemyCards: BattleCard[];
   winner: 'player' | 'enemy' | null;
   coinsEarned: number;
 }
 
-function generateSkills(element: Element, rarity: Rarity): Skill[] {
-  const rarityLevel = RARITY_ORDER[rarity];
+function generateSkills(card: Card): Skill[] {
+  const rarityLevel = RARITY_ORDER[card.rarity];
   const skills: Skill[] = [
-    { id: `atk_${element}`, name: 'Ataque', type: 'ATTACK', power: 80, description: 'Ataque físico' },
+    { id: `atk_${card.id}`, name: card.attackName, type: 'ATTACK', power: 80, description: 'Ataque físico' },
   ];
 
-  if (rarityLevel >= 1) {
+  if (rarityLevel >= 1 && card.magicName) {
     skills.push({
-      id: `mag_${element}`, name: 'Magia', type: 'MAGIC', power: 75,
+      id: `mag_${card.id}`, name: card.magicName, type: 'MAGIC', power: 75,
       description: 'Ataque mágico',
     });
   }
   if (rarityLevel >= 2) {
     skills.push({
-      id: `skill_${element}`, name: `${element} Strike`, type: 'SKILL', power: 120,
-      description: `Golpe elemental ${element}`,
+      id: `skill_${card.id}`, name: `${card.element} Strike`, type: 'SKILL', power: 120,
+      description: `Golpe elemental ${card.element}`,
     });
   }
   if (rarityLevel >= 3) {
     skills.push({
-      id: `ult_${element}`, name: 'Ultimate', type: 'SKILL', power: 180,
+      id: `ult_${card.id}`, name: 'Ultimate', type: 'SKILL', power: 180,
       description: 'Poder definitivo',
     });
   }
@@ -80,7 +93,7 @@ function calcDamage(atk: number, power: number, def: number, elementMult: number
 }
 
 export function createBattleCard(card: Card): BattleCard {
-    const skills = generateSkills(card.element, card.rarity);
+  const skills = generateSkills(card);
   return {
     cardId: card.id,
     name: card.name,
@@ -131,7 +144,7 @@ export function processTurn(
   playerActions: BattleAction[],
   turn: number,
 ): BattleResult {
-  const logs: BattleResult['actions'] = [];
+  const logs: BattleLogAction[] = [];
 
   playerCards.forEach((c) => { c.isDefending = false; });
   enemyCards.forEach((c) => { c.isDefending = false; });

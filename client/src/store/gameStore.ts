@@ -19,9 +19,11 @@ export interface CardData {
   name: string;
   anime: string;
   rarity: string;
-  stats: { attack: number; defense: number; magic: number; luck: number };
+  stats: { attack: number; defense: number; magic: number; luck: number; speed: number };
   element: string;
   hp: number;
+  attackName?: string;
+  magicName?: string;
 }
 
 export interface BattleSkill {
@@ -37,7 +39,7 @@ export interface BattleCardState {
   name: string;
   rarity: string;
   element: string;
-  stats: { attack: number; defense: number; magic: number; luck: number };
+  stats: { attack: number; defense: number; magic: number; luck: number; speed: number };
   currentHp: number;
   maxHp: number;
   skills: BattleSkill[];

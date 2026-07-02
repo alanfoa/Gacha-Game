@@ -253,7 +253,71 @@ A medida que se completen los módulos, marcar con [x] para el tilde verde.
 
 ---
 
-## Stack Tecnológico
+## ⚔️ FASE 13: Motor de Combate Definitivo (Speed-Sorted + Status Effects)
+
+- [ ] **13.1. Nuevas Estadísticas en Cartas**
+  - Agregar campo `speed` a todas las 26 cartas en `server/src/data/cards.ts`
+  - Agregar campo `mag` separado de `atk` a todas las cartas
+  - Rebalancear HP, ATK, MAG, DEF, SPD, LUCK según blueprint
+  - Renombrar IDs de cartas estilo `tanjiro_c`, `gojo_r`, `giorno_l`
+  - Migrar o truncar DB existente para compatibilidad
+
+- [ ] **13.2. Sistema de Status Effects (Server-side)**
+  - Crear tipo `StatusEffect` (`BLEED | STUN | DEF_DOWN | SPD_DOWN | MAG_DOWN | FROZEN`)
+  - Agregar array `statusEffects` a `BattleCard` con `remainingTurns` y `value`
+  - Agregar flag `skipNextTurn: boolean` a `BattleCard`
+  - Lógica de aplicar/expirar efectos al inicio de cada ronda
+  - Lógica de daño por sangrado (15% ATK del atacante al inicio del turno del afectado)
+
+- [ ] **13.3. Speed-Sorted Round Resolution**
+  - Modificar `processTurn()`:
+    1. Expirar status effects del turno anterior
+    2. Procesar daño de sangrado (BLEED)
+    3. Reset `isDefending` de todas las cartas
+    4. Unir acciones player + enemy en pool común
+    5. Ordenar por `speed` descendente
+    6. Procesar acciones una por una en ese orden
+    7. Si carta tiene `skipNextTurn == true`, skipear su acción y resetear flag
+    8. Ejecutar DEFEND → activa `isDefending`
+    9. Ejecutar ataques con fórmula de mitigación porcentual
+  - Nueva fórmula: `base = (statOfensivo * power / 100) * (100 / (100 + defReceptor))`
+  - Log devuelto en orden cronológico exacto de velocidad
+
+- [ ] **13.4. Implementación de Skills Especiales**
+  - **ÉPICOS**: Joseph (ignore 20% DEF), Orsted (-30% MAG 1 turno), Sukuna (sangrado 2 turnos), Madara (+15% crit), Kaido (20% stun)
+  - **LEGENDARIOS**:
+    - Giorno: Strike cura aliado 40% daño infligido, Ultimate reduce SPD a 0
+    - Rudeus: Strike reduce DEF 40% 2 turnos, Ultimate congela (skipNextTurn)
+    - Gojo: Strike reduce SPD 30% 2 turnos, Ultimate ignora 100% DEF
+  - Modificar `generateSkills()` para incluir efectos en el objeto skill
+
+- [ ] **13.5. Frontend: Target Selection Mejorado**
+  - Permitir apuntar a aliados cuando la skill lo requiera (ej. Giorno Strike)
+  - Skills de curación: color verde en target selector
+  - Skills de daño: mantener rojo para enemigos
+
+- [ ] **13.6. Frontend: Manejo de Turnos Skipeados**
+  - Excluir automáticamente cartas con `skipNextTurn` de la selección
+  - Mostrar "CONGELADO" o indicador visual en la carta
+
+- [ ] **13.7. Frontend: Mostrar Velocidad (SPD)**
+  - Agregar SPD a `MiniBattleCard` (indicador compacto)
+  - Agregar SPD al `CardModal` en álbum
+  - Agregar SPD al `TeamSelectScreen`
+
+- [ ] **13.8. Frontend: Feedback Visual de Status Effects**
+  - Iconos de estado (sangrado, stun, defensa baja, etc.) sobre cartas en batalla
+  - Tooltip explicativo al hacer hover
+  - Animación de aplicar efecto (flash del color correspondiente)
+
+- [ ] **13.9. Migración de Saves**
+  - Script de migración para IDs viejos → nuevos
+  - Actualizar `importSave` para detectar versión de save
+
+- [ ] **13.10. Balance Testing**
+  - Test: 5 batallas equipo común vs común
+  - Test: 5 batallas equipo legendario
+  - Ajustar HP/power según duración (target: 3-5 rondas por batalla)
 
 | Herramienta     | Para qué                                |
 |-----------------|------------------------------------------|
