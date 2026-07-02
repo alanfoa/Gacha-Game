@@ -779,8 +779,9 @@ function MiniBattleCard({
     <div
       id={`battle-card-${card.cardId}`}
       style={{
-        background: isActive ? 'rgba(59,130,246,0.1)' : 'rgba(30,30,58,0.8)',
-        border: `2px solid ${isActive ? '#60a5fa' : isAlive ? color : '#374151'}`,
+        background: isActive ? 'rgba(250,204,21,0.1)' : 'rgba(30,30,58,0.8)',
+        border: `2px solid ${isActive ? '#facc15' : isAlive ? color : '#374151'}`,
+        boxShadow: isActive ? '0 0 16px rgba(250,204,21,0.25)' : undefined,
         borderRadius: '8px',
         padding: '1rem',
         display: 'flex',
@@ -788,7 +789,7 @@ function MiniBattleCard({
         alignItems: 'center',
         gap: '0.5rem',
         opacity: isAlive ? 1 : 0.35,
-        transition: 'opacity 0.3s, border-color 0.3s, background 0.3s',
+        transition: 'opacity 0.3s, border-color 0.3s, background 0.3s, box-shadow 0.3s',
         width: '180px',
       }}
     >
