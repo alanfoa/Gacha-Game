@@ -5,6 +5,8 @@ import { useSound } from '../../hooks/useSound';
 import { useGameStore } from '../../store/gameStore';
 import { getBgmVolume } from '../../audio/sounds';
 
+const FOCUSABLES = ['back', 'bgmToggle', 'volDown', 'volUp', 'import', 'export', 'logout'] as const;
+
 export function OptionsScreen() {
   const back = useScreenStore((s) => s.back);
   const logout = useGameStore((s) => s.logout);
@@ -16,9 +18,31 @@ export function OptionsScreen() {
   const [bgmOn, setBgmOn] = useState(true);
   const [volume, setVolume] = useState(getBgmVolume());
   const [importMsg, setImportMsg] = useState<string | null>(null);
+  const [focusIdx, setFocusIdx] = useState(0);
 
   useInputManager((action: GameAction) => {
-    if (action === 'BACK') { play('back'); back(); }
+    switch (action) {
+      case 'BACK':
+        play('back'); back();
+        return;
+      case 'NAV_UP':
+        play('nav'); setFocusIdx((i) => (i - 1 + FOCUSABLES.length) % FOCUSABLES.length);
+        return;
+      case 'NAV_DOWN':
+        play('nav'); setFocusIdx((i) => (i + 1) % FOCUSABLES.length);
+        return;
+      case 'CONFIRM': {
+        const key = FOCUSABLES[focusIdx];
+        if (key === 'back') { play('back'); back(); }
+        else if (key === 'bgmToggle') toggleBGM();
+        else if (key === 'volDown') changeVolume(-0.05);
+        else if (key === 'volUp') changeVolume(0.05);
+        else if (key === 'import') handleImport();
+        else if (key === 'export') handleExport();
+        else if (key === 'logout') logout();
+        return;
+      }
+    }
   });
 
   const toggleBGM = () => {
@@ -84,11 +108,33 @@ export function OptionsScreen() {
         willChange: 'transform',
       }}
     >
-      <button onClick={() => { play('back'); back(); }} style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', background: 'transparent', border: '1px solid #4b5563', color: '#d1d5db', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}>
+      <button
+        data-focus-key="back"
+        onClick={() => { play('back'); back(); }}
+        style={{
+          position: 'absolute', top: '1.5rem', left: '1.5rem',
+          background: 'transparent',
+          border: '1px solid #4b5563',
+          color: '#d1d5db',
+          padding: '0.5rem 1rem',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '0.875rem',
+          outline: FOCUSABLES[focusIdx] === 'back' ? '2px solid #3b82f6' : undefined,
+          outlineOffset: '2px',
+        }}
+      >
         ← VOLVER
       </button>
 
       <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'white', marginBottom: '1rem' }}>OPCIONES</h1>
+
+      <style>{`
+        .opt-btn {
+          transition: outline-color 0.15s, background 0.15s;
+        }
+        .opt-btn:focus { outline: none; }
+      `}</style>
 
       {/* Audio section */}
       <div style={{
@@ -106,6 +152,7 @@ export function OptionsScreen() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ color: '#d1d5db', fontSize: '0.875rem' }}>Música</span>
           <button
+            data-focus-key="bgmToggle"
             onClick={toggleBGM}
             style={{
               padding: '0.4rem 1rem',
@@ -116,6 +163,8 @@ export function OptionsScreen() {
               cursor: 'pointer',
               fontWeight: 600,
               fontSize: '0.75rem',
+              outline: FOCUSABLES[focusIdx] === 'bgmToggle' ? '2px solid #3b82f6' : undefined,
+              outlineOffset: '2px',
             }}
           >
             {bgmOn ? 'ON' : 'OFF'}
@@ -125,7 +174,15 @@ export function OptionsScreen() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
           <span style={{ color: '#d1d5db', fontSize: '0.875rem' }}>Volumen</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <button onClick={() => changeVolume(-0.05)} style={volBtnStyle}>−</button>
+            <button
+              data-focus-key="volDown"
+              onClick={() => changeVolume(-0.05)}
+              style={{
+                ...volBtnStyle,
+                outline: FOCUSABLES[focusIdx] === 'volDown' ? '2px solid #3b82f6' : undefined,
+                outlineOffset: '2px',
+              }}
+            >−</button>
             <div style={{
               width: '100px',
               height: '6px',
@@ -142,22 +199,56 @@ export function OptionsScreen() {
                 transition: 'width 0.15s',
               }} />
             </div>
-            <button onClick={() => changeVolume(0.05)} style={volBtnStyle}>+</button>
+            <button
+              data-focus-key="volUp"
+              onClick={() => changeVolume(0.05)}
+              style={{
+                ...volBtnStyle,
+                outline: FOCUSABLES[focusIdx] === 'volUp' ? '2px solid #3b82f6' : undefined,
+                outlineOffset: '2px',
+              }}
+            >+</button>
           </div>
         </div>
       </div>
 
-      <button onClick={handleImport} style={btnStyle}>
+      <button
+        data-focus-key="import"
+        onClick={handleImport}
+        style={{
+          ...btnStyle,
+          outline: FOCUSABLES[focusIdx] === 'import' ? '2px solid #3b82f6' : undefined,
+          outlineOffset: '2px',
+        }}
+      >
         📤 IMPORTAR PARTIDA
       </button>
       <input ref={fileRef} type="file" accept=".json" onChange={handleFileChange} style={{ display: 'none' }} />
       {importMsg && <p style={{ color: importMsg.startsWith('✅') ? '#4ade80' : '#ef4444', fontSize: '0.875rem', fontWeight: 600 }}>{importMsg}</p>}
 
-      <button onClick={handleExport} style={btnStyle}>
+      <button
+        data-focus-key="export"
+        onClick={handleExport}
+        style={{
+          ...btnStyle,
+          outline: FOCUSABLES[focusIdx] === 'export' ? '2px solid #3b82f6' : undefined,
+          outlineOffset: '2px',
+        }}
+      >
         📥 EXPORTAR PARTIDA
       </button>
 
-      <button onClick={logout} style={{ ...btnStyle, borderColor: '#ef4444', color: '#ef4444' }}>
+      <button
+        data-focus-key="logout"
+        onClick={logout}
+        style={{
+          ...btnStyle,
+          borderColor: '#ef4444',
+          color: '#ef4444',
+          outline: FOCUSABLES[focusIdx] === 'logout' ? '2px solid #ef4444' : undefined,
+          outlineOffset: '2px',
+        }}
+      >
         🚪 CERRAR SESIÓN
       </button>
     </div>

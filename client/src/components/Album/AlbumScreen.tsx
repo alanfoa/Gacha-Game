@@ -128,6 +128,22 @@ export function AlbumScreen() {
       </div>
 
       {/* Grid */}
+      <style>{`
+        .album-card {
+          transition: opacity 0.3s, outline-color 0.3s, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+          cursor: pointer;
+          border-radius: 8px;
+        }
+        .album-card:hover {
+          transform: scale(1.07) translateY(-4px);
+          box-shadow: 0 8px 32px rgba(96,165,250,0.15);
+          outline: 2px solid rgba(96,165,250,0.5);
+          outline-offset: 3px;
+        }
+        .album-card:active {
+          transform: scale(0.98);
+        }
+      `}</style>
       <div
         ref={gridRef}
         style={{
@@ -146,13 +162,11 @@ export function AlbumScreen() {
               key={card.id}
               data-album-index={i}
               onClick={() => { setFocusIndex(i); handleCardClick(card); }}
+              className="album-card"
               style={{
                 opacity: owned ? 1 : 0.2,
-                transition: 'opacity 0.3s, outline-color 0.3s',
-                cursor: 'pointer',
                 outline: isFocused ? '3px solid #3b82f6' : '3px solid transparent',
                 outlineOffset: '2px',
-                borderRadius: '8px',
               }}
             >
               <PlaceholderCard
