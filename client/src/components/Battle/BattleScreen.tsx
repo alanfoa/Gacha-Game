@@ -44,6 +44,7 @@ export function BattleScreen() {
   const pendingActionsRef = useRef<{ cardId: string; action: string; targetId: string; skillId?: string }[]>([]);
 
   const alivePlayerCards = useMemo(() => playerBattleCards.filter((c) => c.currentHp > 0), [playerBattleCards]);
+  const actionablePlayerCards = useMemo(() => playerBattleCards.filter((c) => c.currentHp > 0 && !c.skipNextTurn), [playerBattleCards]);
   const aliveEnemyCards = useMemo(() => enemyBattleCards.filter((c) => c.currentHp > 0), [enemyBattleCards]);
 
   // Reset state when cards change (battle start/new turn)
@@ -57,7 +58,17 @@ export function BattleScreen() {
     }
   }, [playerBattleCards, enemyBattleCards, battleTurn, phase]);
 
-  const currentCard = alivePlayerCards[currentCardIdx];
+  const currentCard = actionablePlayerCards[currentCardIdx];
+
+  // Auto-submit if no cards can act (all frozen/stunned)
+  useEffect(() => {
+    if (phase === 'player_turn' && actionablePlayerCards.length === 0 && alivePlayerCards.length > 0) {
+      const timer = setTimeout(() => {
+        submitTurn();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, actionablePlayerCards.length, alivePlayerCards.length]);
 
   // Show action menu for the current alive card
   const actionOptions = useMemo(() => {
@@ -250,7 +261,7 @@ export function BattleScreen() {
     setShowSkillSubmenu(false);
 
     const nextIdx = currentCardIdx + 1;
-    if (nextIdx >= alivePlayerCards.length) {
+    if (nextIdx >= actionablePlayerCards.length) {
       // All cards have acted, submit
       submitTurn();
     } else {

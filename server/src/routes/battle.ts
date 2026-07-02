@@ -75,12 +75,12 @@ router.post('/battle/start', (req, res) => {
       playerCards: playerCards.map((c) => ({
         cardId: c.cardId, name: c.name, rarity: c.rarity, element: c.element,
         stats: c.stats, currentHp: c.currentHp, maxHp: c.maxHp,
-        skills: c.skills,
+        skills: c.skills, statusEffects: c.statusEffects, skipNextTurn: c.skipNextTurn,
       })),
       enemyCards: enemyCards.map((c) => ({
         cardId: c.cardId, name: c.name, rarity: c.rarity, element: c.element,
         stats: c.stats, currentHp: c.currentHp, maxHp: c.maxHp,
-        skills: c.skills,
+        skills: c.skills, statusEffects: c.statusEffects, skipNextTurn: c.skipNextTurn,
       })),
     });
   } catch {
@@ -99,7 +99,7 @@ router.post('/battle/action', (req, res) => {
     if (!session) return sendError(res, 404, 'Batalla no encontrada o expirada');
     if (session.winner) return sendError(res, 400, 'La batalla ya terminó');
 
-    if (!actions || actions.length === 0) {
+    if (!actions) {
       return sendError(res, 400, 'Se requieren acciones');
     }
 
@@ -130,12 +130,12 @@ router.post('/battle/action', (req, res) => {
       playerCards: result.playerCards.map((c) => ({
         cardId: c.cardId, name: c.name, rarity: c.rarity, element: c.element,
         stats: c.stats, currentHp: c.currentHp, maxHp: c.maxHp,
-        skills: c.skills,
+        skills: c.skills, statusEffects: c.statusEffects, skipNextTurn: c.skipNextTurn,
       })),
       enemyCards: result.enemyCards.map((c) => ({
         cardId: c.cardId, name: c.name, rarity: c.rarity, element: c.element,
         stats: c.stats, currentHp: c.currentHp, maxHp: c.maxHp,
-        skills: c.skills,
+        skills: c.skills, statusEffects: c.statusEffects, skipNextTurn: c.skipNextTurn,
       })),
       winner: result.winner,
       coinsEarned: result.coinsEarned,
