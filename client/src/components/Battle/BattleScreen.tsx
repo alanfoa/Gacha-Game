@@ -298,7 +298,7 @@ export function BattleScreen() {
           setPhase('result');
           if (battleWinner === 'player') play('victory');
           else play('defeat');
-        }, 500);
+        }, 1200);
         return () => clearTimeout(timer);
       }
       // Next turn
@@ -311,7 +311,7 @@ export function BattleScreen() {
         setActionMenuFocus(0);
         setTargetFocus(0);
         setCurrentLogIdx(-1);
-      }, 1000);
+      }, 1800);
       return () => clearTimeout(timer);
     }
 
@@ -323,7 +323,7 @@ export function BattleScreen() {
 
     const timer = setTimeout(() => {
       setCurrentLogIdx((i) => i + 1);
-    }, 800);
+    }, 1400);
     return () => clearTimeout(timer);
   }, [phase, battleLog, currentLogIdx, battleWinner, skipAnim]);
 
