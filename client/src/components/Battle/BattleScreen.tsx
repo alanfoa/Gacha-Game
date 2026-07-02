@@ -430,7 +430,8 @@ export function BattleScreen() {
         flexDirection: 'column',
         background: '#0f0f1a',
         position: 'relative',
-        overflow: 'hidden',
+        overflowX: 'hidden',
+        overflowY: 'auto',
       }}
     >
       <style>{`
@@ -442,6 +443,9 @@ export function BattleScreen() {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
       `}</style>
       {/* Background glow */}
       <div
@@ -623,6 +627,8 @@ export function BattleScreen() {
           background: 'rgba(12,12,25,0.95)',
           boxShadow: '0 -8px 32px rgba(0,0,0,0.4)',
           position: 'relative',
+          overflowY: 'auto',
+          maxHeight: '30vh',
         }}>
           {phase === 'player_turn' && currentCard && !showSkillSubmenu && !selectedAction && (
             <ActionMenu
@@ -906,11 +912,11 @@ function ActionMenu({ options, focus, onSelect, onFocusChange }: { options: { la
 function SkillSubmenu({ skills, focus, onSelect, onFocusChange }: { skills: BattleSkill[]; focus: number; onSelect?: (skillId: string) => void; onFocusChange?: (i: number) => void }) {
   return (
     <div style={{
-      display: 'flex', justifyContent: 'center', gap: '1rem',
-      padding: '1.25rem 1.5rem 1.75rem',
+      display: 'flex', justifyContent: 'center', gap: '0.5rem',
+      padding: '0.5rem 1rem 1rem',
       flexWrap: 'wrap',
     }}>
-      <div style={{ width: '100%', textAlign: 'center', color: '#94a3b8', fontSize: '0.875rem', fontWeight: 600, letterSpacing: '0.15em', marginBottom: '0.5rem' }}>
+      <div style={{ width: '100%', textAlign: 'center', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.15em', marginBottom: '0.25rem' }}>
         SELECCIONA HABILIDAD
       </div>
       {skills.map((skill, i) => {
@@ -921,13 +927,13 @@ function SkillSubmenu({ skills, focus, onSelect, onFocusChange }: { skills: Batt
             onClick={() => onSelect?.(skill.id)}
             onMouseEnter={() => onFocusChange?.(i)}
             style={{
-              padding: '0.75rem 1.5rem',
+              padding: '0.5rem 1rem',
               background: active ? '#3b82f6' : '#334155',
               border: `2px solid ${active ? '#93c5fd' : '#64748b'}`,
               borderRadius: '8px',
               color: '#ffffff',
               fontWeight: 600,
-              fontSize: '0.9375rem',
+              fontSize: '0.8125rem',
               letterSpacing: '0.05em',
               textAlign: 'center',
               boxShadow: active ? '0 0 12px rgba(59,130,246,0.25)' : 'none',
@@ -936,7 +942,7 @@ function SkillSubmenu({ skills, focus, onSelect, onFocusChange }: { skills: Batt
             }}
           >
             <div>{skill.name}</div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+            <div style={{ fontSize: '0.65rem', color: '#94a3b8', marginTop: '0.15rem' }}>
               Potencia: {skill.power}
             </div>
           </div>
