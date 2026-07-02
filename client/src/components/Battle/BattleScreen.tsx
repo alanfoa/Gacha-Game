@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import gsap from 'gsap';
 import { useScreenStore } from '../../store/screenStore';
-import { useGameStore, type BattleCardState, type BattleSkill } from '../../store/gameStore';
+import { useGameStore, type BattleCardState } from '../../store/gameStore';
 import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
 import { getCardCanvas } from '../Sobre/cardTexture';
@@ -91,12 +91,16 @@ export function BattleScreen() {
     return currentCard.skills.filter((s) => s.type === 'SKILL');
   }, [currentCard]);
 
+  const skillOptions = useMemo(() => {
+    return currentSkills.map((s) => ({ label: s.name, value: s.id }));
+  }, [currentSkills]);
+
   // --- Click handlers ---
   function handleActionSelect(value: string) {
     if (!currentCard) return;
     if (value === 'SKILL') {
       setShowSkillSubmenu(true);
-      setTargetFocus(0);
+      setActionMenuFocus(0);
       play('nav');
     } else if (value === 'DEFEND') {
       pendingActionsRef.current = [...pendingActionsRef.current, { cardId: currentCard.cardId, action: 'DEFEND', targetId: currentCard.cardId }];
@@ -107,14 +111,6 @@ export function BattleScreen() {
       setTargetFocus(0);
       play('confirm');
     }
-  }
-
-  function handleSkillSelect(skillId: string) {
-    setSelectedSkill(skillId);
-    setSelectedAction('SKILL');
-    setShowSkillSubmenu(false);
-    setTargetFocus(0);
-    play('confirm');
   }
 
   function handleTargetSelect(targetId: string) {
@@ -177,53 +173,42 @@ export function BattleScreen() {
 
     if (!currentCard) return;
 
-    if (showSkillSubmenu) {
-      if (action === 'NAV_UP' || action === 'NAV_LEFT') {
-        setTargetFocus((f) => Math.max(0, f - 1));
-        play('nav');
-      }
-      if (action === 'NAV_DOWN' || action === 'NAV_RIGHT') {
-        setTargetFocus((f) => Math.min(currentSkills.length - 1, f + 1));
-        play('nav');
-      }
-      if (action === 'CONFIRM') {
-        const skill = currentSkills[targetFocus];
-        if (skill) {
-          setSelectedSkill(skill.id);
-          setSelectedAction('SKILL');
-          setShowSkillSubmenu(false);
-          setTargetFocus(0);
-          play('confirm');
-        }
-      }
-      return;
-    }
-
     if (!selectedAction) {
-      // Action menu
+      // Action / Skill menu (inline)
+      const items = showSkillSubmenu ? currentSkills : actionOptions;
       if (action === 'NAV_UP' || action === 'NAV_LEFT') {
         setActionMenuFocus((f) => Math.max(0, f - 1));
         play('nav');
       }
       if (action === 'NAV_DOWN' || action === 'NAV_RIGHT') {
-        setActionMenuFocus((f) => Math.min(actionOptions.length - 1, f + 1));
+        setActionMenuFocus((f) => Math.min(items.length - 1, f + 1));
         play('nav');
       }
       if (action === 'CONFIRM') {
-        const chosen = actionOptions[actionMenuFocus];
-        if (!chosen) return;
-        if (chosen.value === 'SKILL') {
-          setShowSkillSubmenu(true);
-          setTargetFocus(0);
-          play('nav');
-        } else if (chosen.value === 'DEFEND') {
-          pendingActionsRef.current = [...pendingActionsRef.current, { cardId: currentCard.cardId, action: 'DEFEND', targetId: currentCard.cardId }];
-          advanceToNextCard();
-          play('confirm');
+        if (showSkillSubmenu) {
+          const skill = currentSkills[actionMenuFocus];
+          if (skill) {
+            setSelectedSkill(skill.id);
+            setSelectedAction('SKILL');
+            setShowSkillSubmenu(false);
+            play('confirm');
+          }
         } else {
-          setSelectedAction(chosen.value);
-          setTargetFocus(0);
-          play('confirm');
+          const chosen = actionOptions[actionMenuFocus];
+          if (!chosen) return;
+          if (chosen.value === 'SKILL') {
+            setShowSkillSubmenu(true);
+            setActionMenuFocus(0);
+            play('nav');
+          } else if (chosen.value === 'DEFEND') {
+            pendingActionsRef.current = [...pendingActionsRef.current, { cardId: currentCard.cardId, action: 'DEFEND', targetId: currentCard.cardId }];
+            advanceToNextCard();
+            play('confirm');
+          } else {
+            setSelectedAction(chosen.value);
+            setTargetFocus(0);
+            play('confirm');
+          }
         }
       }
       return;
@@ -430,8 +415,7 @@ export function BattleScreen() {
         flexDirection: 'column',
         background: '#0f0f1a',
         position: 'relative',
-        overflowX: 'hidden',
-        overflowY: 'auto',
+        overflow: 'hidden',
       }}
     >
       <style>{`
@@ -443,9 +427,7 @@ export function BattleScreen() {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
+
       `}</style>
       {/* Background glow */}
       <div
@@ -627,23 +609,25 @@ export function BattleScreen() {
           background: 'rgba(12,12,25,0.95)',
           boxShadow: '0 -8px 32px rgba(0,0,0,0.4)',
           position: 'relative',
-          overflowY: 'auto',
-          maxHeight: '30vh',
         }}>
-          {phase === 'player_turn' && currentCard && !showSkillSubmenu && !selectedAction && (
+          {phase === 'player_turn' && currentCard && !selectedAction && (
             <ActionMenu
-              options={actionOptions}
+              options={showSkillSubmenu ? skillOptions : actionOptions}
               focus={actionMenuFocus}
-              onSelect={handleActionSelect}
+              onSelect={(value) => {
+                if (showSkillSubmenu) {
+                  const skill = currentSkills.find((s) => s.id === value);
+                  if (skill) {
+                    setSelectedSkill(skill.id);
+                    setSelectedAction('SKILL');
+                    setShowSkillSubmenu(false);
+                    play('confirm');
+                  }
+                } else {
+                  handleActionSelect(value);
+                }
+              }}
               onFocusChange={(i) => setActionMenuFocus(i)}
-            />
-          )}
-          {phase === 'player_turn' && currentCard && showSkillSubmenu && (
-            <SkillSubmenu
-              skills={currentSkills}
-              focus={targetFocus}
-              onSelect={handleSkillSelect}
-              onFocusChange={(i) => setTargetFocus(i)}
             />
           )}
           {phase === 'player_turn' && selectedAction && (
@@ -902,49 +886,6 @@ function ActionMenu({ options, focus, onSelect, onFocusChange }: { options: { la
             }}
           >
             {opt.label}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function SkillSubmenu({ skills, focus, onSelect, onFocusChange }: { skills: BattleSkill[]; focus: number; onSelect?: (skillId: string) => void; onFocusChange?: (i: number) => void }) {
-  return (
-    <div style={{
-      display: 'flex', justifyContent: 'center', gap: '0.5rem',
-      padding: '0.5rem 1rem 1rem',
-      flexWrap: 'wrap',
-    }}>
-      <div style={{ width: '100%', textAlign: 'center', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.15em', marginBottom: '0.25rem' }}>
-        SELECCIONA HABILIDAD
-      </div>
-      {skills.map((skill, i) => {
-        const active = i === focus;
-        return (
-          <div
-            key={skill.id}
-            onClick={() => onSelect?.(skill.id)}
-            onMouseEnter={() => onFocusChange?.(i)}
-            style={{
-              padding: '0.5rem 1rem',
-              background: active ? '#3b82f6' : '#334155',
-              border: `2px solid ${active ? '#93c5fd' : '#64748b'}`,
-              borderRadius: '8px',
-              color: '#ffffff',
-              fontWeight: 600,
-              fontSize: '0.8125rem',
-              letterSpacing: '0.05em',
-              textAlign: 'center',
-              boxShadow: active ? '0 0 12px rgba(59,130,246,0.25)' : 'none',
-              cursor: 'pointer',
-              transition: 'all 0.12s ease',
-            }}
-          >
-            <div>{skill.name}</div>
-            <div style={{ fontSize: '0.65rem', color: '#94a3b8', marginTop: '0.15rem' }}>
-              Potencia: {skill.power}
-            </div>
           </div>
         );
       })}
