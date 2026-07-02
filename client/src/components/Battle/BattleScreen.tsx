@@ -22,7 +22,7 @@ export function BattleScreen() {
     playerBattleCards, enemyBattleCards, battleLog, battleTurn,
     battleWinner, battleCoinsEarned, loading, submitBattleActions, clearBattle,
   } = useGameStore();
-  const { play, pauseBGM, startBattleBGM } = useSound();
+  const { play, pauseBGM, startBattleBGM, restartMenuBGM } = useSound();
 
   const [phase, setPhase] = useState<Phase>('player_turn');
   const [currentCardIdx, setCurrentCardIdx] = useState(0);
@@ -625,7 +625,7 @@ export function BattleScreen() {
         <BattleResult
           winner={battleWinner}
           coinsEarned={battleCoinsEarned}
-          onConfirm={() => { clearBattle(); navigate('menu'); }}
+          onConfirm={() => { clearBattle(); restartMenuBGM(); navigate('menu'); }}
         />
       ) : (
         <div style={{
@@ -734,7 +734,7 @@ export function BattleScreen() {
                 NO
               </button>
               <button
-                onClick={() => { clearBattle(); navigate('menu'); }}
+                onClick={() => { clearBattle(); restartMenuBGM(); navigate('menu'); }}
                 style={{
                   padding: '0.5rem 1.5rem',
                   background: '#991b1b',

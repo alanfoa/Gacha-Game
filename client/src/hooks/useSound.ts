@@ -33,9 +33,13 @@ export function useSound() {
     BGM.resume();
   }, []);
 
+  const restartMenuBGM = useCallback((volume = 0.04) => {
+    BGM.start(volume);
+  }, []);
+
   const setBGMVolume = useCallback((vol: number) => {
     BGM.setVolume(vol);
   }, []);
 
-  return { play, startBGM, startBattleBGM, stopBGM, pauseBGM, resumeBGM, setBGMVolume };
+  return { play, startBGM, startBattleBGM, stopBGM, pauseBGM, resumeBGM, restartMenuBGM, setBGMVolume };
 }
