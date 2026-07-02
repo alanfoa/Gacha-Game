@@ -818,6 +818,49 @@ function MiniBattleCard({
       }}>
         SPD {card.stats.speed}
       </span>
+      {card.skipNextTurn && (
+        <span style={{
+          color: '#60a5fa', fontSize: '0.65rem', fontWeight: 800,
+          background: 'rgba(96,165,250,0.15)', padding: '1px 6px',
+          borderRadius: '3px', letterSpacing: '0.05em',
+        }}>
+          SALTEA TURNO
+        </span>
+      )}
+      {card.statusEffects && card.statusEffects.length > 0 && (
+        <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {card.statusEffects.map((eff, i) => {
+            const colors: Record<string, string> = {
+              BLEED: '#ef4444', STUN: '#facc15', FREEZE: '#60a5fa',
+              SPD_DOWN: '#a78bfa', ATK_DOWN: '#fb923c', DEF_DOWN: '#34d399',
+              MAG_DOWN: '#c084fc', CRIT_BONUS: '#f59e0b',
+              IGNORE_DEF: '#f472b6', IGNORE_ALL_DEF: '#ec4899',
+              HEAL_ALLY: '#22c55e', DEF_UP: '#06b6d4',
+            };
+            const labels: Record<string, string> = {
+              BLEED: 'SANGR', STUN: 'ATURD', FREEZE: 'CONG',
+              SPD_DOWN: 'SPD-', ATK_DOWN: 'ATK-', DEF_DOWN: 'DEF-',
+              MAG_DOWN: 'MAG-', CRIT_BONUS: 'CRIT+',
+              IGNORE_DEF: 'IG DEF', IGNORE_ALL_DEF: 'IG ALL',
+              HEAL_ALLY: 'CURA', DEF_UP: 'DEF+',
+            };
+            const c = colors[eff.type] || '#6b7280';
+            return (
+              <span
+                key={i}
+                title={`${eff.type} (${eff.remainingTurns}t, ${eff.value}%${eff.sourceName ? ` - ${eff.sourceName}` : ''})`}
+                style={{
+                  color: c, fontSize: '0.6rem', fontWeight: 700,
+                  background: `${c}22`, padding: '1px 5px',
+                  borderRadius: '3px', letterSpacing: '0.03em',
+                }}
+              >
+                {labels[eff.type] || eff.type}
+              </span>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
