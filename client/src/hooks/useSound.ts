@@ -4,10 +4,17 @@ import { SFX, BGM, initAudio } from '../audio/sounds';
 export function useSound() {
   const bgmRef = useRef(false);
 
+  const ensureBGM = useCallback(() => {
+    if (bgmRef.current && !BGM.isPlaying()) {
+      BGM.start();
+    }
+  }, []);
+
   const play = useCallback((sound: keyof typeof SFX, ...args: Parameters<typeof SFX[keyof typeof SFX]>) => {
     initAudio();
+    ensureBGM();
     (SFX[sound] as (...args: any[]) => void)(...args);
-  }, []);
+  }, [ensureBGM]);
 
   const startBGM = useCallback((volume = 0.04) => {
     if (bgmRef.current) return;

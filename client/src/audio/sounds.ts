@@ -175,6 +175,7 @@ export function getBgmVolume() {
 }
 
 function startBgmInternal(src: string, volume?: number) {
+  initAudio();
   if (bgmHowl) {
     try { bgmHowl.stop(); } catch {}
     bgmHowl = null;
@@ -186,12 +187,11 @@ function startBgmInternal(src: string, volume?: number) {
       src: [src],
       loop: true,
       volume: bgmVolume,
-      onloaderror: () => { bgmHowl = null; },
-      onplayerror: () => { bgmHowl = null; },
+      html5: true,
     });
     bgmHowlId = bgmHowl.play();
   } catch {
-    bgmHowl = null;
+    // ignore
   }
 }
 
@@ -205,6 +205,7 @@ export const BGM = {
   },
 
   switchToMenu(volume?: number) {
+    initAudio();
     if (bgmHowl) {
       try { bgmHowl.stop(); } catch {}
       bgmHowl = null;
@@ -216,12 +217,11 @@ export const BGM = {
         src: ['/audio/bgm.ogg'],
         loop: true,
         volume: bgmVolume,
-        onloaderror: () => { bgmHowl = null; },
-        onplayerror: () => { bgmHowl = null; },
+        html5: true,
       });
       bgmHowlId = bgmHowl.play();
     } catch {
-      bgmHowl = null;
+      // ignore
     }
   },
 
