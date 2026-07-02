@@ -43,6 +43,8 @@ export interface BattleCardState {
   currentHp: number;
   maxHp: number;
   skills: BattleSkill[];
+  statusEffects: { type: string; remainingTurns: number; value: number; sourceName: string }[];
+  skipNextTurn: boolean;
 }
 
 export interface BattleLogEntry {

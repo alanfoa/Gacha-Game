@@ -4,6 +4,22 @@ const REWARD_COINS = [30, 60, 100, 200];
 
 export type ActionType = 'ATTACK' | 'MAGIC' | 'DEFEND' | 'SKILL';
 
+export type StatusEffectType =
+  | 'BLEED'
+  | 'STUN'
+  | 'DEF_DOWN'
+  | 'SPD_DOWN'
+  | 'MAG_DOWN'
+  | 'FROZEN'
+  | 'CRIT_UP';
+
+export interface StatusEffect {
+  type: StatusEffectType;
+  remainingTurns: number;
+  value: number;
+  sourceName: string;
+}
+
 export interface SkillEffect {
   type: 'NONE' | 'IGNORE_DEF' | 'MAG_DOWN' | 'BLEED' | 'CRIT_BONUS' | 'STUN' | 'HEAL_ALLY' | 'SPD_DOWN' | 'DEF_DOWN' | 'FREEZE' | 'IGNORE_ALL_DEF';
   value?: number;
@@ -30,6 +46,8 @@ export interface BattleCard {
   maxHp: number;
   isDefending: boolean;
   skills: Skill[];
+  statusEffects: StatusEffect[];
+  skipNextTurn: boolean;
 }
 
 export interface BattleAction {
@@ -104,6 +122,8 @@ export function createBattleCard(card: Card): BattleCard {
     maxHp: card.hp,
     isDefending: false,
     skills,
+    statusEffects: [],
+    skipNextTurn: false,
   };
 }
 
@@ -145,6 +165,32 @@ export function processTurn(
   turn: number,
 ): BattleResult {
   const logs: BattleLogAction[] = [];
+
+  // Step 1: Process status effects (expire, bleed damage)
+  for (const card of [...playerCards, ...enemyCards]) {
+    if (card.currentHp <= 0) continue;
+
+    // Bleed damage
+    const bleed = card.statusEffects.find((e) => e.type === 'BLEED');
+    if (bleed) {
+      const bleedDmg = Math.max(1, Math.round(bleed.value));
+      card.currentHp -= bleedDmg;
+      clampHp(card);
+      logs.push({
+        cardId: card.cardId,
+        targetId: card.cardId,
+        damage: bleedDmg,
+        critical: false,
+        action: 'SKILL',
+        message: `${card.name} recibe ${bleedDmg} de sangrado`,
+      });
+    }
+
+    // Decrease durations and remove expired
+    card.statusEffects = card.statusEffects
+      .map((e) => ({ ...e, remainingTurns: e.remainingTurns - 1 }))
+      .filter((e) => e.remainingTurns > 0);
+  }
 
   playerCards.forEach((c) => { c.isDefending = false; });
   enemyCards.forEach((c) => { c.isDefending = false; });
