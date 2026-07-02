@@ -528,7 +528,7 @@ export function BattleScreen() {
               card={card}
               color={getCardColor(card.rarity)}
               isAlive={card.currentHp > 0}
-              isActive={card.cardId === activeCardId}
+              isActive={phase !== 'player_turn' && card.cardId === activeCardId}
             />
           ))}
         </div>
@@ -614,7 +614,7 @@ export function BattleScreen() {
               card={card}
               color={getCardColor(card.rarity)}
               isAlive={card.currentHp > 0}
-              isActive={card.cardId === activeCardId}
+              isActive={phase === 'player_turn' ? card === currentCard : card.cardId === activeCardId}
             />
           ))}
         </div>
