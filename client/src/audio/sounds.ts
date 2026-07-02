@@ -201,7 +201,7 @@ export const BGM = {
   },
 
   startBattle(volume?: number) {
-    startBgmInternal('/audio/bgm.ogg', volume);
+    startBgmInternal('/audio/bgm_battle.webm', volume);
   },
 
   stop() {

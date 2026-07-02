@@ -22,7 +22,7 @@ export function BattleScreen() {
     playerBattleCards, enemyBattleCards, battleLog, battleTurn,
     battleWinner, battleCoinsEarned, loading, submitBattleActions, clearBattle,
   } = useGameStore();
-  const { play, pauseBGM } = useSound();
+  const { play, pauseBGM, startBattleBGM } = useSound();
 
   const [phase, setPhase] = useState<Phase>('player_turn');
   const [currentCardIdx, setCurrentCardIdx] = useState(0);
@@ -50,13 +50,14 @@ export function BattleScreen() {
   // Reset state when cards change (battle start/new turn)
   useEffect(() => {
     if (battleTurn === 0 && phase === 'player_turn') {
+      startBattleBGM();
       setCurrentCardIdx(0);
       pendingActionsRef.current = [];
       setCurrentLogIdx(-1);
       setSelectedAction(null);
       setSelectedSkill(null);
     }
-  }, [playerBattleCards, enemyBattleCards, battleTurn, phase]);
+  }, [playerBattleCards, enemyBattleCards, battleTurn, phase, startBattleBGM]);
 
   const currentCard = actionablePlayerCards[currentCardIdx];
   const activeCardId = phase === 'player_turn'
