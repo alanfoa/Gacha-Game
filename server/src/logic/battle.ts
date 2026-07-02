@@ -75,6 +75,52 @@ export interface BattleResult {
   coinsEarned: number;
 }
 
+function getStrikeEffect(cardId: string): SkillEffect | undefined {
+  switch (cardId) {
+    case 'joseph_e': return { type: 'IGNORE_DEF', value: 20 };
+    case 'orsted_e': return { type: 'MAG_DOWN', value: 30, duration: 1 };
+    case 'sukuna_e': return { type: 'BLEED', value: 15, duration: 2 };
+    case 'madara_e': return { type: 'CRIT_BONUS', value: 15 };
+    case 'kaido_e':  return { type: 'STUN', chance: 20 };
+    case 'giorno_l': return { type: 'HEAL_ALLY', value: 40 };
+    case 'rudeus_god_l': return { type: 'DEF_DOWN', value: 40, duration: 2 };
+    case 'gojo_awak_l': return { type: 'SPD_DOWN', value: 30, duration: 2 };
+    default: return undefined;
+  }
+}
+
+function getUltimateEffect(cardId: string): SkillEffect | undefined {
+  switch (cardId) {
+    case 'giorno_l':    return { type: 'SPD_DOWN', value: 100, duration: 1 };
+    case 'rudeus_god_l': return { type: 'FREEZE' };
+    case 'gojo_awak_l':  return { type: 'IGNORE_ALL_DEF' };
+    default: return undefined;
+  }
+}
+
+function getStrikeName(cardId: string): string {
+  switch (cardId) {
+    case 'joseph_e': return 'Hamon Overdrive';
+    case 'orsted_e': return 'Perturbación de Magia';
+    case 'sukuna_e': return 'Dismantle';
+    case 'madara_e': return 'Katon: Gōka Mekkyaku';
+    case 'kaido_e':  return 'Raimei Hakke';
+    case 'giorno_l': return 'Gold Experience';
+    case 'rudeus_god_l': return 'Stone Cannon Máximo';
+    case 'gojo_awak_l': return 'Rojo (Aka)';
+    default: return `${cards.find((c) => c.id === cardId)?.element ?? ''} Strike`;
+  }
+}
+
+function getUltimateName(cardId: string): string {
+  switch (cardId) {
+    case 'giorno_l':    return 'Gold Experience Requiem';
+    case 'rudeus_god_l': return 'Cumulonimbus Absoluto';
+    case 'gojo_awak_l':  return 'Púrpura (Murasaki)';
+    default: return 'Ultimate';
+  }
+}
+
 function generateSkills(card: Card): Skill[] {
   const rarityLevel = RARITY_ORDER[card.rarity];
   const skills: Skill[] = [
@@ -88,15 +134,21 @@ function generateSkills(card: Card): Skill[] {
     });
   }
   if (rarityLevel >= 2) {
+    const strikeEffect = getStrikeEffect(card.id);
+    const strikeName = getStrikeName(card.id);
     skills.push({
-      id: `skill_${card.id}`, name: `${card.element} Strike`, type: 'SKILL', power: 120,
+      id: `skill_${card.id}`, name: strikeName, type: 'SKILL', power: 120,
       description: `Golpe elemental ${card.element}`,
+      effect: strikeEffect,
     });
   }
   if (rarityLevel >= 3) {
+    const ultEffect = getUltimateEffect(card.id);
+    const ultName = getUltimateName(card.id);
     skills.push({
-      id: `ult_${card.id}`, name: 'Ultimate', type: 'SKILL', power: 180,
+      id: `ult_${card.id}`, name: ultName, type: 'SKILL', power: 180,
       description: 'Poder definitivo',
+      effect: ultEffect,
     });
   }
 
