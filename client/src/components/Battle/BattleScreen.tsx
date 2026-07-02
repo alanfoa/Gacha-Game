@@ -614,6 +614,7 @@ export function BattleScreen() {
             <ActionMenu
               options={showSkillSubmenu ? skillOptions : actionOptions}
               focus={actionMenuFocus}
+              sublabels={showSkillSubmenu ? currentSkills.map((s) => `Potencia: ${s.power}`) : undefined}
               onSelect={(value) => {
                 if (showSkillSubmenu) {
                   const skill = currentSkills.find((s) => s.id === value);
@@ -857,7 +858,7 @@ function MiniBattleCard({
 
 
 
-function ActionMenu({ options, focus, onSelect, onFocusChange }: { options: { label: string; value: string }[]; focus: number; onSelect?: (value: string) => void; onFocusChange?: (i: number) => void }) {
+function ActionMenu({ options, focus, onSelect, onFocusChange, sublabels }: { options: { label: string; value: string }[]; focus: number; onSelect?: (value: string) => void; onFocusChange?: (i: number) => void; sublabels?: string[] }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'center', gap: '1rem',
@@ -871,7 +872,7 @@ function ActionMenu({ options, focus, onSelect, onFocusChange }: { options: { la
             onClick={() => onSelect?.(opt.value)}
             onMouseEnter={() => onFocusChange?.(i)}
             style={{
-              padding: '0.75rem 2rem',
+              padding: '0.5rem 1.5rem',
               background: active ? '#3b82f6' : '#334155',
               border: `2px solid ${active ? '#93c5fd' : '#64748b'}`,
               borderRadius: '8px',
@@ -879,13 +880,19 @@ function ActionMenu({ options, focus, onSelect, onFocusChange }: { options: { la
               fontWeight: 700,
               fontSize: '1.125rem',
               letterSpacing: '0.08em',
+              textAlign: 'center',
               boxShadow: active ? '0 0 16px rgba(59,130,246,0.4)' : 'none',
               transform: active ? 'scale(1.06)' : 'scale(1)',
               cursor: 'pointer',
               transition: 'all 0.12s ease',
             }}
           >
-            {opt.label}
+            <div>{opt.label}</div>
+            {sublabels?.[i] && (
+              <div style={{ fontSize: '0.65rem', color: '#94a3b8', marginTop: '0.15rem', fontWeight: 600 }}>
+                {sublabels[i]}
+              </div>
+            )}
           </div>
         );
       })}
