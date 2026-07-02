@@ -626,6 +626,31 @@ export function BattleScreen() {
           boxShadow: '0 -8px 32px rgba(0,0,0,0.4)',
           position: 'relative',
         }}>
+          {(showSkillSubmenu || selectedAction) && (
+            <button
+              onClick={() => {
+                play('back');
+                if (showSkillSubmenu) {
+                  setShowSkillSubmenu(false);
+                } else if (selectedAction) {
+                  setSelectedAction(null);
+                  setSelectedSkill(null);
+                }
+              }}
+              style={{
+                position: 'absolute', left: '0.25rem', top: '50%', transform: 'translateY(-50%)',
+                background: 'transparent', border: '2px solid #4b5563', borderRadius: '50%',
+                color: '#9ca3af', width: '34px', height: '34px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '1.25rem', fontWeight: 700, cursor: 'pointer',
+                zIndex: 20, transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#60a5fa'; e.currentTarget.style.color = '#60a5fa'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#4b5563'; e.currentTarget.style.color = '#9ca3af'; }}
+            >
+              ←
+            </button>
+          )}
           {phase === 'player_turn' && currentCard && !selectedAction && (
             <ActionMenu
               options={showSkillSubmenu ? skillOptions : actionOptions}
