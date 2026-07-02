@@ -95,6 +95,22 @@ export function BattleScreen() {
     return currentSkills.map((s) => ({ label: s.name, value: s.id }));
   }, [currentSkills]);
 
+  const actionSublabels = useMemo(() => {
+    if (!currentCard) return [];
+    const result: string[] = [];
+    const atk = currentCard.skills[0];
+    result.push(atk ? `Pot: ${atk.power}` : '');
+    if (currentCard.skills.some((s) => s.type === 'MAGIC')) {
+      const mag = currentCard.skills.find((s) => s.type === 'MAGIC');
+      result.push(mag ? `Pot: ${mag.power}` : '');
+    }
+    if (currentCard.skills.some((s) => s.type === 'SKILL')) {
+      result.push('');
+    }
+    result.push('');
+    return result;
+  }, [currentCard]);
+
   // --- Click handlers ---
   function handleActionSelect(value: string) {
     if (!currentCard) return;
@@ -614,7 +630,7 @@ export function BattleScreen() {
             <ActionMenu
               options={showSkillSubmenu ? skillOptions : actionOptions}
               focus={actionMenuFocus}
-              sublabels={showSkillSubmenu ? currentSkills.map((s) => `Potencia: ${s.power}`) : undefined}
+              sublabels={showSkillSubmenu ? currentSkills.map((s) => `Potencia: ${s.power}`) : actionSublabels}
               onSelect={(value) => {
                 if (showSkillSubmenu) {
                   const skill = currentSkills.find((s) => s.id === value);
