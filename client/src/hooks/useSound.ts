@@ -34,7 +34,7 @@ export function useSound() {
   }, []);
 
   const restartMenuBGM = useCallback((volume = 0.25) => {
-    BGM.start(volume);
+    BGM.switchToMenu(volume);
   }, []);
 
   const setBGMVolume = useCallback((vol: number) => {

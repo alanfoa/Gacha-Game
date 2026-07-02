@@ -204,6 +204,27 @@ export const BGM = {
     startBgmInternal('/audio/bgm_battle.webm', volume);
   },
 
+  switchToMenu(volume?: number) {
+    if (bgmHowl) {
+      try { bgmHowl.stop(); } catch {}
+      bgmHowl = null;
+      bgmHowlId = null;
+    }
+    if (volume !== undefined) bgmVolume = volume;
+    try {
+      bgmHowl = new Howl({
+        src: ['/audio/bgm.ogg'],
+        loop: true,
+        volume: bgmVolume,
+        onloaderror: () => { bgmHowl = null; },
+        onplayerror: () => { bgmHowl = null; },
+      });
+      bgmHowlId = bgmHowl.play();
+    } catch {
+      bgmHowl = null;
+    }
+  },
+
   stop() {
     if (!bgmHowl) return;
     const howl = bgmHowl;

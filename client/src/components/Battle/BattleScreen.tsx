@@ -4,6 +4,7 @@ import { useScreenStore } from '../../store/screenStore';
 import { useGameStore, type BattleCardState } from '../../store/gameStore';
 import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
+import { BGM } from '../../audio/sounds';
 import { getCardCanvas } from '../Sobre/cardTexture';
 
 type Phase = 'player_turn' | 'resolving' | 'result';
@@ -22,7 +23,7 @@ export function BattleScreen() {
     playerBattleCards, enemyBattleCards, battleLog, battleTurn,
     battleWinner, battleCoinsEarned, loading, submitBattleActions, clearBattle,
   } = useGameStore();
-  const { play, pauseBGM, startBattleBGM, restartMenuBGM } = useSound();
+  const { play, stopBGM, startBattleBGM } = useSound();
 
   const [phase, setPhase] = useState<Phase>('player_turn');
   const [currentCardIdx, setCurrentCardIdx] = useState(0);
@@ -296,7 +297,7 @@ export function BattleScreen() {
       // All logs shown
       if (battleWinner) {
         const timer = setTimeout(() => {
-          pauseBGM();
+          stopBGM();
           setPhase('result');
           if (battleWinner === 'player') play('victory');
           else play('defeat');
@@ -625,7 +626,7 @@ export function BattleScreen() {
         <BattleResult
           winner={battleWinner}
           coinsEarned={battleCoinsEarned}
-          onConfirm={() => { clearBattle(); restartMenuBGM(); navigate('menu'); }}
+          onConfirm={() => { clearBattle(); BGM.switchToMenu(); navigate('menu'); }}
         />
       ) : (
         <div style={{
@@ -734,7 +735,7 @@ export function BattleScreen() {
                 NO
               </button>
               <button
-                onClick={() => { clearBattle(); restartMenuBGM(); navigate('menu'); }}
+                onClick={() => { clearBattle(); BGM.switchToMenu(); navigate('menu'); }}
                 style={{
                   padding: '0.5rem 1.5rem',
                   background: '#991b1b',
