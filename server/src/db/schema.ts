@@ -41,4 +41,12 @@ try {
   // columns already exist
 }
 
+// Migration v13: remove old-format card IDs (c01, c02, etc.)
+const oldCards = db.prepare("SELECT id FROM inventory WHERE card_id GLOB 'c[0-9]*'").all() as { id: number }[];
+if (oldCards.length > 0) {
+  const ids = oldCards.map((r) => r.id);
+  db.exec(`DELETE FROM inventory WHERE id IN (${ids.join(',')})`);
+  console.log(`[migracion] Eliminadas ${ids.length} cartas con IDs antiguos del inventario`);
+}
+
 export default db;
