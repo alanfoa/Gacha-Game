@@ -92,7 +92,7 @@ export function BattleScreen() {
   }, [currentCard]);
 
   const skillOptions = useMemo(() => {
-    return currentSkills.map((s) => ({ label: s.name, value: s.id }));
+    return [...currentSkills.map((s) => ({ label: s.name, value: s.id })), { label: '← VOLVER', value: '__back__' }];
   }, [currentSkills]);
 
   const actionSublabels = useMemo(() => {
@@ -625,32 +625,8 @@ export function BattleScreen() {
           background: 'rgba(12,12,25,0.95)',
           boxShadow: '0 -8px 32px rgba(0,0,0,0.4)',
           position: 'relative',
+          display: 'flex', justifyContent: 'center',
         }}>
-          {(showSkillSubmenu || selectedAction) && (
-            <button
-              onClick={() => {
-                play('back');
-                if (showSkillSubmenu) {
-                  setShowSkillSubmenu(false);
-                } else if (selectedAction) {
-                  setSelectedAction(null);
-                  setSelectedSkill(null);
-                }
-              }}
-              style={{
-                position: 'absolute', left: '0.25rem', top: '50%', transform: 'translateY(-50%)',
-                background: 'transparent', border: '2px solid #4b5563', borderRadius: '50%',
-                color: '#9ca3af', width: '34px', height: '34px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '1.25rem', fontWeight: 700, cursor: 'pointer',
-                zIndex: 20, transition: 'all 0.15s ease',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#60a5fa'; e.currentTarget.style.color = '#60a5fa'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#4b5563'; e.currentTarget.style.color = '#9ca3af'; }}
-            >
-              ←
-            </button>
-          )}
           {phase === 'player_turn' && currentCard && !selectedAction && (
             <ActionMenu
               options={showSkillSubmenu ? skillOptions : actionOptions}
@@ -658,6 +634,11 @@ export function BattleScreen() {
               sublabels={showSkillSubmenu ? currentSkills.map((s) => `Potencia: ${s.power}`) : actionSublabels}
               onSelect={(value) => {
                 if (showSkillSubmenu) {
+                  if (value === '__back__') {
+                    setShowSkillSubmenu(false);
+                    play('back');
+                    return;
+                  }
                   const skill = currentSkills.find((s) => s.id === value);
                   if (skill) {
                     setSelectedSkill(skill.id);
@@ -679,6 +660,7 @@ export function BattleScreen() {
               label="Selecciona objetivo enemigo"
               onSelect={handleTargetSelect}
               onFocusChange={(i) => setTargetFocus(i)}
+              onBack={() => { setSelectedAction(null); setSelectedSkill(null); play('back'); }}
             />
           )}
           {(phase === 'resolving' || phase === 'player_turn' && !currentCard) && (
@@ -941,7 +923,7 @@ function ActionMenu({ options, focus, onSelect, onFocusChange, sublabels }: { op
   );
 }
 
-function TargetMenu({ targets, focus, label, onSelect, onFocusChange }: { targets: BattleCardState[]; focus: number; label: string; onSelect?: (targetId: string) => void; onFocusChange?: (i: number) => void }) {
+function TargetMenu({ targets, focus, label, onSelect, onFocusChange, onBack }: { targets: BattleCardState[]; focus: number; label: string; onSelect?: (targetId: string) => void; onFocusChange?: (i: number) => void; onBack?: () => void }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'center', gap: '0.75rem',
@@ -979,6 +961,25 @@ function TargetMenu({ targets, focus, label, onSelect, onFocusChange }: { target
             </div>
           );
         })}
+        {onBack && (
+          <div
+            onClick={onBack}
+            style={{
+              padding: '0.5rem 1rem',
+              background: '#334155',
+              border: '2px solid #64748b',
+              borderRadius: '8px',
+              color: '#94a3b8',
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              letterSpacing: '0.05em',
+              cursor: 'pointer',
+              transition: 'all 0.12s ease',
+            }}
+          >
+            ← VOLVER
+          </div>
+        )}
         {targets.length === 0 && (
           <span style={{ color: '#6b7280', fontStyle: 'italic' }}>No hay objetivos</span>
         )}
