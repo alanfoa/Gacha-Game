@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useScreenStore } from '../../store/screenStore';
 import { useGameStore, type CardData } from '../../store/gameStore';
 import { useInputManager, type GameAction } from '../../hooks/useInputManager';
@@ -6,16 +6,60 @@ import { useSound } from '../../hooks/useSound';
 import { PlaceholderCard } from '../UI/PlaceholderCard';
 import { CardModal } from '../UI/CardModal';
 
+const CARD_W = 140;
+const GAP = 12;
+
 export function AlbumScreen() {
   const back = useScreenStore((s) => s.back);
   const { allCards, unlockedCards, user } = useGameStore();
   const { play } = useSound();
   const [selected, setSelected] = useState<CardData | null>(null);
   const [selectedOwned, setSelectedOwned] = useState(false);
+  const [focusIndex, setFocusIndex] = useState(0);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  const getColumns = () => {
+    if (!gridRef.current) return 5;
+    return Math.max(1, Math.floor((gridRef.current.offsetWidth + GAP) / (CARD_W + GAP)));
+  };
 
   useInputManager((action: GameAction) => {
-    if (action === 'BACK') { if (selected) { setSelected(null); return; } play('back'); back(); }
+    if (selected) {
+      if (action === 'BACK') { setSelected(null); }
+      return;
+    }
+    switch (action) {
+      case 'BACK':
+        play('back'); back();
+        return;
+      case 'NAV_LEFT':
+        setFocusIndex((i) => Math.max(0, i - 1));
+        return;
+      case 'NAV_RIGHT':
+        setFocusIndex((i) => Math.min(allCards.length - 1, i + 1));
+        return;
+      case 'NAV_UP':
+        setFocusIndex((i) => Math.max(0, i - getColumns()));
+        return;
+      case 'NAV_DOWN':
+        setFocusIndex((i) => Math.min(allCards.length - 1, i + getColumns()));
+        return;
+      case 'CONFIRM': {
+        const card = allCards[focusIndex];
+        if (card) { setSelected(card); setSelectedOwned(unlockedCards.includes(card.id)); }
+        return;
+      }
+    }
   });
+
+  useEffect(() => {
+    setFocusIndex((i) => Math.min(i, Math.max(0, allCards.length - 1)));
+  }, [allCards.length]);
+
+  useEffect(() => {
+    const el = document.querySelector(`[data-album-index="${focusIndex}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  }, [focusIndex]);
 
   const total = allCards.length;
   const unlocked = unlockedCards.length;
@@ -85,24 +129,30 @@ export function AlbumScreen() {
 
       {/* Grid */}
       <div
+        ref={gridRef}
         style={{
           display: 'flex',
-          gap: '0.75rem',
+          gap: `${GAP}px`,
           flexWrap: 'wrap',
           justifyContent: 'center',
           paddingBottom: '2rem',
         }}
       >
-        {allCards.map((card) => {
+        {allCards.map((card, i) => {
           const owned = unlockedCards.includes(card.id);
+          const isFocused = i === focusIndex;
           return (
             <div
               key={card.id}
-              onClick={() => handleCardClick(card)}
+              data-album-index={i}
+              onClick={() => { setFocusIndex(i); handleCardClick(card); }}
               style={{
                 opacity: owned ? 1 : 0.2,
-                transition: 'opacity 0.3s',
+                transition: 'opacity 0.3s, outline-color 0.3s',
                 cursor: 'pointer',
+                outline: isFocused ? '3px solid #3b82f6' : '3px solid transparent',
+                outlineOffset: '2px',
+                borderRadius: '8px',
               }}
             >
               <PlaceholderCard

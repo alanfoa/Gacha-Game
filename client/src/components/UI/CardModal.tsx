@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { PlaceholderCard } from './PlaceholderCard';
 import type { CardData } from '../../store/gameStore';
@@ -12,6 +12,9 @@ interface Props {
 export function CardModal({ card, owned, onClose }: Props) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const cardOuterRef = useRef<HTMLDivElement>(null);
+  const cardInnerRef = useRef<HTMLDivElement>(null);
+  const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
     if (!overlayRef.current || !modalRef.current) return;
@@ -20,10 +23,47 @@ export function CardModal({ card, owned, onClose }: Props) {
   }, []);
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft') setRotation((r) => r - 15);
+      if (e.key === 'ArrowRight') setRotation((r) => r + 15);
+    };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
+
+  useEffect(() => {
+    const el = cardOuterRef.current;
+    if (!el) return;
+    const inner = cardInnerRef.current;
+    if (!inner) return;
+
+    const onMove = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      const tiltX = (x - 0.5) * 20;
+      const tiltY = (0.5 - y) * 20;
+      inner.style.transform = `rotateX(${tiltY}deg) rotateY(${tiltX}deg)`;
+    };
+
+    const onLeave = () => {
+      inner.style.transform = 'rotateX(0deg) rotateY(0deg)';
+    };
+
+    el.addEventListener('mousemove', onMove);
+    el.addEventListener('mouseleave', onLeave);
+    return () => {
+      el.removeEventListener('mousemove', onMove);
+      el.removeEventListener('mouseleave', onLeave);
+    };
+  }, []);
+
+  useEffect(() => {
+    const el = cardOuterRef.current;
+    if (!el) return;
+    el.style.transform = `rotateY(${rotation}deg)`;
+  }, [rotation]);
 
   const rarityLabel = (r: string) => {
     switch (r) {
@@ -63,7 +103,11 @@ export function CardModal({ card, owned, onClose }: Props) {
           boxShadow: `0 0 60px ${rl.color}20`,
         }}
       >
-        <PlaceholderCard rarity={card.rarity} name={owned ? card.name : '???'} />
+        <div ref={cardOuterRef} style={{ perspective: '800px', transition: 'transform 0.3s ease-out' }}>
+          <div ref={cardInnerRef} style={{ willChange: 'transform', transition: 'transform 0.08s ease-out' }}>
+            <PlaceholderCard rarity={card.rarity} name={owned ? card.name : '???'} />
+          </div>
+        </div>
 
         <div style={{ flex: 1 }}>
           <p style={{ color: rl.color, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.3em', margin: 0 }}>{rl.text}</p>

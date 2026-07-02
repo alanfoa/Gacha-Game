@@ -490,17 +490,17 @@ export function BattleScreen() {
       {/* Enemy cards */}
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        padding: '1rem 1.5rem 0.5rem', position: 'relative', zIndex: 10,
+        padding: '1.25rem 1.5rem 0.75rem', position: 'relative', zIndex: 10,
       }}>
         <span style={{
-          color: '#ef4444', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.2em',
-          marginBottom: '0.5rem', opacity: 0.8,
+          color: '#ef4444', fontSize: '0.8125rem', fontWeight: 700, letterSpacing: '0.2em',
+          marginBottom: '0.75rem', opacity: 0.8,
         }}>
           — RIVAL —
         </span>
         <div style={{
-          display: 'flex', justifyContent: 'center', gap: '1rem',
-          minHeight: '200px', alignItems: 'center',
+          display: 'flex', justifyContent: 'center', gap: '1.25rem',
+          minHeight: '310px', alignItems: 'center',
         }}>
           {enemyBattleCards.map((card) => (
             <MiniBattleCard
@@ -517,49 +517,49 @@ export function BattleScreen() {
       <div style={{
         flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center',
         position: 'relative', zIndex: 10,
-        padding: '0.75rem 1rem',
-        minHeight: '90px',
+        padding: '1rem 1.5rem',
+        minHeight: '120px',
       }}>
-          {currentLogIdx >= 0 && currentLogIdx < battleLog.length && currentLogIdx >= newLogStartRef.current ? (
-            (() => {
-              const entry = battleLog[currentLogIdx];
-              const isPlayerAttack = playerBattleCards.some(c => c.cardId === entry.cardId);
-              const isCritical = entry.critical;
-              const accentColor = isCritical ? '#fbbf24' : isPlayerAttack ? '#60a5fa' : '#ef4444';
-              const bgTint = isCritical
-                ? 'rgba(251,191,36,0.08)'
-                : isPlayerAttack
-                  ? 'rgba(59,130,246,0.07)'
-                  : 'rgba(239,68,68,0.07)';
-              return (
-                <div
-                  id={`log-entry-${currentLogIdx}`}
-                  style={{
-                    textAlign: 'center',
-                    fontSize: isCritical ? '1.25rem' : '0.9375rem',
-                    fontWeight: isCritical ? 900 : 700,
-                    color: isCritical ? '#fbbf24' : (isPlayerAttack ? '#93c5fd' : '#fca5a5'),
-                    letterSpacing: '0.05em',
-                    lineHeight: 1.6,
-                    textShadow: isCritical
-                      ? '0 0 30px rgba(251,191,36,0.6), 0 0 60px rgba(251,191,36,0.3)'
-                      : 'none',
-                    padding: '0.75rem 1.5rem',
-                    background: bgTint,
-                    borderLeft: `3px solid ${accentColor}`,
-                    borderRadius: '4px',
-                    maxWidth: '500px',
-                    width: '100%',
-                    transition: 'border-color 0.3s, background 0.3s',
-                  }}
-                >
-                  {entry.message}
-                </div>
-              );
-            })()
+        {currentLogIdx >= 0 && currentLogIdx < battleLog.length && currentLogIdx >= newLogStartRef.current ? (
+          (() => {
+            const entry = battleLog[currentLogIdx];
+            const isPlayerAttack = playerBattleCards.some(c => c.cardId === entry.cardId);
+            const isCritical = entry.critical;
+            const accentColor = isCritical ? '#fbbf24' : isPlayerAttack ? '#60a5fa' : '#ef4444';
+            const bgTint = isCritical
+              ? 'rgba(251,191,36,0.08)'
+              : isPlayerAttack
+                ? 'rgba(59,130,246,0.07)'
+                : 'rgba(239,68,68,0.07)';
+            return (
+              <div
+                id={`log-entry-${currentLogIdx}`}
+                style={{
+                  textAlign: 'center',
+                  fontSize: isCritical ? '1.5rem' : '1.125rem',
+                  fontWeight: isCritical ? 900 : 700,
+                  color: isCritical ? '#fbbf24' : (isPlayerAttack ? '#93c5fd' : '#fca5a5'),
+                  letterSpacing: '0.05em',
+                  lineHeight: 1.6,
+                  textShadow: isCritical
+                    ? '0 0 30px rgba(251,191,36,0.6), 0 0 60px rgba(251,191,36,0.3)'
+                    : 'none',
+                  padding: '1rem 2rem',
+                  background: bgTint,
+                  borderLeft: `3px solid ${accentColor}`,
+                  borderRadius: '4px',
+                  maxWidth: '600px',
+                  width: '100%',
+                  transition: 'border-color 0.3s, background 0.3s',
+                }}
+              >
+                {entry.message}
+              </div>
+            );
+          })()
         ) : (
           <div style={{
-            color: '#6b7280', fontSize: '0.875rem', fontStyle: 'italic',
+            color: '#6b7280', fontSize: '1rem', fontStyle: 'italic',
             opacity: phase === 'resolving' ? 0.6 : 1,
             letterSpacing: '0.1em',
           }}>
@@ -575,17 +575,17 @@ export function BattleScreen() {
       {/* Player cards */}
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        padding: '0.5rem 1.5rem 1rem', position: 'relative', zIndex: 10,
+        padding: '0.75rem 1.5rem 1.25rem', position: 'relative', zIndex: 10,
       }}>
         <span style={{
-          color: '#60a5fa', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.2em',
-          marginBottom: '0.5rem', opacity: 0.8,
+          color: '#60a5fa', fontSize: '0.8125rem', fontWeight: 700, letterSpacing: '0.2em',
+          marginBottom: '0.75rem', opacity: 0.8,
         }}>
           — MIS CARTAS —
         </span>
         <div style={{
-          display: 'flex', justifyContent: 'center', gap: '1rem',
-          minHeight: '200px', alignItems: 'center',
+          display: 'flex', justifyContent: 'center', gap: '1.25rem',
+          minHeight: '310px', alignItems: 'center',
         }}>
           {playerBattleCards.map((card) => (
             <MiniBattleCard
@@ -757,25 +757,25 @@ function MiniBattleCard({
         background: isActive ? 'rgba(59,130,246,0.1)' : 'rgba(30,30,58,0.8)',
         border: `2px solid ${isActive ? '#60a5fa' : isAlive ? color : '#374151'}`,
         borderRadius: '8px',
-        padding: '0.5rem',
+        padding: '1rem',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '0.25rem',
+        gap: '0.5rem',
         opacity: isAlive ? 1 : 0.35,
         transition: 'opacity 0.3s, border-color 0.3s, background 0.3s',
-        width: '110px',
+        width: '180px',
       }}
     >
       <canvas
         ref={canvasRef}
-        width={80}
-        height={112}
-        style={{ width: '80px', height: '112px', borderRadius: '4px' }}
+        width={130}
+        height={182}
+        style={{ width: '130px', height: '182px', borderRadius: '4px' }}
       />
       <span style={{
         color: isAlive ? '#e5e7eb' : '#6b7280',
-        fontSize: '0.6875rem',
+        fontSize: '0.9375rem',
         fontWeight: 700,
         letterSpacing: '0.05em',
         textAlign: 'center',
@@ -783,18 +783,18 @@ function MiniBattleCard({
         {card.name}
       </span>
       {/* HP bar */}
-      <div style={{ width: '100%', height: '6px', background: '#374151', borderRadius: '3px', overflow: 'hidden' }}>
+      <div style={{ width: '100%', height: '10px', background: '#374151', borderRadius: '4px', overflow: 'hidden' }}>
         <div style={{
           width: `${hpPercent * 100}%`,
           height: '100%',
           background: hpPercent > 0.5 ? '#22c55e' : hpPercent > 0.25 ? '#f59e0b' : '#ef4444',
-          borderRadius: '3px',
+          borderRadius: '4px',
           transition: 'width 0.5s ease',
         }} />
       </div>
       <span style={{
         color: isAlive ? '#d1d5db' : '#6b7280',
-        fontSize: '0.625rem',
+        fontSize: '0.8125rem',
         fontWeight: 600,
       }}>
         {Math.max(0, card.currentHp)}/{card.maxHp}
@@ -808,8 +808,8 @@ function MiniBattleCard({
 function ActionMenu({ options, focus, onSelect, onFocusChange }: { options: { label: string; value: string }[]; focus: number; onSelect?: (value: string) => void; onFocusChange?: (i: number) => void }) {
   return (
     <div style={{
-      display: 'flex', justifyContent: 'center', gap: '0.75rem',
-      padding: '1rem 1.5rem 1.5rem',
+      display: 'flex', justifyContent: 'center', gap: '1rem',
+      padding: '1.25rem 1.5rem 1.75rem',
     }}>
       {options.map((opt, i) => {
         const active = i === focus;
@@ -819,13 +819,13 @@ function ActionMenu({ options, focus, onSelect, onFocusChange }: { options: { la
             onClick={() => onSelect?.(opt.value)}
             onMouseEnter={() => onFocusChange?.(i)}
             style={{
-              padding: '0.6rem 1.5rem',
+              padding: '0.75rem 2rem',
               background: active ? '#3b82f6' : '#334155',
               border: `2px solid ${active ? '#93c5fd' : '#64748b'}`,
               borderRadius: '8px',
               color: '#ffffff',
               fontWeight: 700,
-              fontSize: '0.9375rem',
+              fontSize: '1.125rem',
               letterSpacing: '0.08em',
               boxShadow: active ? '0 0 16px rgba(59,130,246,0.4)' : 'none',
               transform: active ? 'scale(1.06)' : 'scale(1)',
@@ -844,11 +844,11 @@ function ActionMenu({ options, focus, onSelect, onFocusChange }: { options: { la
 function SkillSubmenu({ skills, focus, onSelect, onFocusChange }: { skills: BattleSkill[]; focus: number; onSelect?: (skillId: string) => void; onFocusChange?: (i: number) => void }) {
   return (
     <div style={{
-      display: 'flex', justifyContent: 'center', gap: '0.75rem',
-      padding: '1rem 1.5rem 1.5rem',
+      display: 'flex', justifyContent: 'center', gap: '1rem',
+      padding: '1.25rem 1.5rem 1.75rem',
       flexWrap: 'wrap',
     }}>
-      <div style={{ width: '100%', textAlign: 'center', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.15em', marginBottom: '0.25rem' }}>
+      <div style={{ width: '100%', textAlign: 'center', color: '#94a3b8', fontSize: '0.875rem', fontWeight: 600, letterSpacing: '0.15em', marginBottom: '0.5rem' }}>
         SELECCIONA HABILIDAD
       </div>
       {skills.map((skill, i) => {
@@ -859,13 +859,13 @@ function SkillSubmenu({ skills, focus, onSelect, onFocusChange }: { skills: Batt
             onClick={() => onSelect?.(skill.id)}
             onMouseEnter={() => onFocusChange?.(i)}
             style={{
-              padding: '0.5rem 1rem',
+              padding: '0.75rem 1.5rem',
               background: active ? '#3b82f6' : '#334155',
               border: `2px solid ${active ? '#93c5fd' : '#64748b'}`,
               borderRadius: '8px',
               color: '#ffffff',
               fontWeight: 600,
-              fontSize: '0.8125rem',
+              fontSize: '0.9375rem',
               letterSpacing: '0.05em',
               textAlign: 'center',
               boxShadow: active ? '0 0 12px rgba(59,130,246,0.25)' : 'none',
@@ -874,7 +874,7 @@ function SkillSubmenu({ skills, focus, onSelect, onFocusChange }: { skills: Batt
             }}
           >
             <div>{skill.name}</div>
-            <div style={{ fontSize: '0.625rem', color: '#94a3b8', marginTop: '0.125rem' }}>
+            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
               Potencia: {skill.power}
             </div>
           </div>

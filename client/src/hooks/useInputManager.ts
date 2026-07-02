@@ -14,7 +14,7 @@ type GamepadState = {
   buttons: boolean[];
 };
 
-const DEBOUNCE_MS = 200;
+const DEBOUNCE_MS = 100;
 const AXIS_THRESHOLD = 0.5;
 const GAMEPAD_INDEX = 0;
 
@@ -36,7 +36,6 @@ export function useInputManager(onAction: (action: GameAction) => void) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.repeat) return; // Ignore OS key repeat
       switch (e.key) {
         case 'ArrowUp':
         case 'w':
