@@ -302,6 +302,12 @@ function CardSelectButton({
       }}>
         {card.name}
       </span>
+      <div style={{ display: 'flex', gap: '0.375rem', fontSize: '0.6rem', fontWeight: 600, color: '#6b7280' }}>
+        <span style={{ color: '#ef4444' }}>ATK {card.stats.attack}</span>
+        <span style={{ color: '#60a5fa' }}>SPD {card.stats.speed}</span>
+        <span style={{ color: '#a855f7' }}>MAG {card.stats.magic}</span>
+        <span style={{ color: '#3b82f6' }}>DEF {card.stats.defense}</span>
+      </div>
       {isSelected && (
         <span style={{ color: '#fbbf24', fontSize: '0.625rem', fontWeight: 600 }}>
           ✓ SELECCIONADA

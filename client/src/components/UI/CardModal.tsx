@@ -122,6 +122,7 @@ export function CardModal({ card, owned, onClose }: Props) {
             <StatBar label="ATK" value={card.stats.attack} color="#ef4444" />
             <StatBar label="DEF" value={card.stats.defense} color="#3b82f6" />
             <StatBar label="MAG" value={card.stats.magic} color="#a855f7" />
+            <StatBar label="SPD" value={card.stats.speed} color="#60a5fa" />
             <StatBar label="LCK" value={card.stats.luck} color="#facc15" />
           </div>
 

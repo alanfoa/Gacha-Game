@@ -810,6 +810,14 @@ function MiniBattleCard({
       }}>
         {Math.max(0, card.currentHp)}/{card.maxHp}
       </span>
+      <span style={{
+        color: '#60a5fa',
+        fontSize: '0.6875rem',
+        fontWeight: 700,
+        letterSpacing: '0.03em',
+      }}>
+        SPD {card.stats.speed}
+      </span>
     </div>
   );
 }
