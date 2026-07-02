@@ -15,14 +15,27 @@ export function useSound() {
     BGM.start(volume);
   }, []);
 
+  const startBattleBGM = useCallback((volume = 0.04) => {
+    bgmRef.current = true;
+    BGM.startBattle(volume);
+  }, []);
+
   const stopBGM = useCallback(() => {
     bgmRef.current = false;
     BGM.stop();
+  }, []);
+
+  const pauseBGM = useCallback(() => {
+    BGM.pause();
+  }, []);
+
+  const resumeBGM = useCallback(() => {
+    BGM.resume();
   }, []);
 
   const setBGMVolume = useCallback((vol: number) => {
     BGM.setVolume(vol);
   }, []);
 
-  return { play, startBGM, stopBGM, setBGMVolume };
+  return { play, startBGM, startBattleBGM, stopBGM, pauseBGM, resumeBGM, setBGMVolume };
 }

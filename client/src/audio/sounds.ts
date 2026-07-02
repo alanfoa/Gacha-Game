@@ -174,23 +174,34 @@ export function getBgmVolume() {
   return bgmVolume;
 }
 
+function startBgmInternal(src: string, volume?: number) {
+  if (bgmHowl) {
+    try { bgmHowl.stop(); } catch {}
+    bgmHowl = null;
+    bgmHowlId = null;
+  }
+  if (volume !== undefined) bgmVolume = volume;
+  try {
+    bgmHowl = new Howl({
+      src: [src],
+      loop: true,
+      volume: bgmVolume,
+      onloaderror: () => { bgmHowl = null; },
+      onplayerror: () => { bgmHowl = null; },
+    });
+    bgmHowlId = bgmHowl.play();
+  } catch {
+    bgmHowl = null;
+  }
+}
+
 export const BGM = {
   start(volume?: number) {
-    if (bgmHowl) return;
-    if (volume !== undefined) bgmVolume = volume;
+    startBgmInternal('/audio/bgm.ogg', volume);
+  },
 
-    try {
-      bgmHowl = new Howl({
-        src: ['/audio/bgm.ogg'],
-        loop: true,
-        volume: bgmVolume,
-        onloaderror: () => { bgmHowl = null; },
-        onplayerror: () => { bgmHowl = null; },
-      });
-      bgmHowlId = bgmHowl.play();
-    } catch {
-      bgmHowl = null;
-    }
+  startBattle(volume?: number) {
+    startBgmInternal('/audio/bgm.ogg', volume);
   },
 
   stop() {
@@ -203,6 +214,23 @@ export const BGM = {
       if (id !== null) howl.fade(howl.volume(), 0, 500, id);
       setTimeout(() => { try { howl.stop(); } catch {} }, 550);
     } catch { /* ignore */ }
+  },
+
+  pause() {
+    if (!bgmHowl || bgmHowlId === null) return;
+    try { bgmHowl.pause(bgmHowlId); } catch {}
+  },
+
+  resume() {
+    if (!bgmHowl) return;
+    try {
+      if (bgmHowlId !== null) bgmHowl.play(bgmHowlId);
+      else bgmHowlId = bgmHowl.play();
+    } catch {}
+  },
+
+  isPlaying() {
+    return bgmHowl !== null && bgmHowlId !== null;
   },
 
   setVolume(vol: number) {

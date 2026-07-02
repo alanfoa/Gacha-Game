@@ -22,7 +22,7 @@ export function BattleScreen() {
     playerBattleCards, enemyBattleCards, battleLog, battleTurn,
     battleWinner, battleCoinsEarned, loading, submitBattleActions, clearBattle,
   } = useGameStore();
-  const { play } = useSound();
+  const { play, pauseBGM } = useSound();
 
   const [phase, setPhase] = useState<Phase>('player_turn');
   const [currentCardIdx, setCurrentCardIdx] = useState(0);
@@ -295,6 +295,7 @@ export function BattleScreen() {
       // All logs shown
       if (battleWinner) {
         const timer = setTimeout(() => {
+          pauseBGM();
           setPhase('result');
           if (battleWinner === 'player') play('victory');
           else play('defeat');
