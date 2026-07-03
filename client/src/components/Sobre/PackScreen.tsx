@@ -433,7 +433,7 @@ export function PackScreen() {
             <div ref={flashRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />
 
             {hypeRarity && (
-              <div style={{ position: 'absolute', top: '30%', zIndex: 999, pointerEvents: 'none' }}>
+              <div style={{ position: 'absolute', top: '17%', zIndex: 999, pointerEvents: 'none' }}>
                 <span
                   style={{
                     fontSize: '3rem', fontWeight: 900,

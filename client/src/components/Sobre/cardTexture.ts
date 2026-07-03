@@ -277,21 +277,22 @@ export function getCardCanvas(
   const bx = rx + 2 * scale;
   const by = ry + rh - nameH - 2 * scale;
 
-  // Skewed black background polygon
+  // Skewed black background polygon (skew relative to banner position, not canvas origin)
+  const skewShift = nameH * tanSkew;
   ctx.beginPath();
-  ctx.moveTo(bx + by * tanSkew, by);
-  ctx.lineTo(bx + nameW + by * tanSkew, by);
-  ctx.lineTo(bx + nameW + (by + nameH) * tanSkew, by + nameH);
-  ctx.lineTo(bx + (by + nameH) * tanSkew, by + nameH);
+  ctx.moveTo(bx, by);
+  ctx.lineTo(bx + nameW, by);
+  ctx.lineTo(bx + nameW + skewShift, by + nameH);
+  ctx.lineTo(bx + skewShift, by + nameH);
   ctx.closePath();
   ctx.fillStyle = 'rgba(0,0,0,0.85)';
   ctx.fill();
 
-  // White text
+  // White text (positioned at mid-height of the skewed banner)
   ctx.fillStyle = styles.metal1;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillText(nameStr, bx + 6 * scale + (by + nameH / 2) * tanSkew, by + nameH / 2);
+  ctx.fillText(nameStr, bx + 6 * scale + skewShift / 2, by + nameH / 2);
   ctx.textBaseline = 'alphabetic';
 
   return canvas;
