@@ -19,9 +19,12 @@ export function TeamSelectScreen() {
   }, [allCards, inventory]);
 
   const cols = 4;
+  const totalItems = availableCards.length + 1; // +1 for the start button
+  const BUTTON_INDEX = availableCards.length; // focus index for the button
   const [focus, setFocus] = useState(0);
   const focusRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const mountedAt = useRef(Date.now());
 
   const handleStartBattle = useCallback(async () => {
@@ -40,35 +43,61 @@ export function TeamSelectScreen() {
       return;
     }
 
+    const cur = focusRef.current;
+    const isOnButton = cur === BUTTON_INDEX;
+
     if (action === 'NAV_UP') {
-      const target = focusRef.current - cols;
-      if (target >= 0) {
-        focusRef.current = target;
-        setFocus(target);
+      if (isOnButton) {
+        const lastRowStart = Math.max(0, availableCards.length - cols);
+        focusRef.current = lastRowStart;
+        setFocus(lastRowStart);
         play('nav');
-      }
-      return;
-    }
-    if (action === 'NAV_DOWN') {
-      const target = focusRef.current + cols;
-      if (target < availableCards.length) {
-        focusRef.current = target;
-        setFocus(target);
+      } else if (cur < cols) {
+        focusRef.current = BUTTON_INDEX;
+        setFocus(BUTTON_INDEX);
         play('nav');
-      }
-      return;
-    }
-    if (action === 'NAV_LEFT') {
-      if (focusRef.current % cols > 0) {
-        focusRef.current--;
+      } else {
+        focusRef.current = cur - cols;
         setFocus(focusRef.current);
         play('nav');
       }
       return;
     }
+
+    if (action === 'NAV_DOWN') {
+      if (isOnButton) {
+        focusRef.current = 0;
+        setFocus(0);
+        play('nav');
+      } else {
+        const inLastRow = cur + cols >= availableCards.length;
+        if (inLastRow) {
+          focusRef.current = BUTTON_INDEX;
+          setFocus(BUTTON_INDEX);
+          play('nav');
+        } else {
+          focusRef.current = cur + cols;
+          setFocus(focusRef.current);
+          play('nav');
+        }
+      }
+      return;
+    }
+
+    if (action === 'NAV_LEFT') {
+      if (isOnButton) return;
+      if (cur % cols > 0) {
+        focusRef.current = cur - 1;
+        setFocus(focusRef.current);
+        play('nav');
+      }
+      return;
+    }
+
     if (action === 'NAV_RIGHT') {
-      if (focusRef.current % cols < cols - 1 && focusRef.current + 1 < availableCards.length) {
-        focusRef.current++;
+      if (isOnButton) return;
+      if (cur % cols < cols - 1 && cur + 1 < availableCards.length) {
+        focusRef.current = cur + 1;
         setFocus(focusRef.current);
         play('nav');
       }
@@ -76,25 +105,34 @@ export function TeamSelectScreen() {
     }
 
     if (action === 'CONFIRM') {
-      const card = availableCards[focusRef.current];
-      if (!card) return;
-      // If 3 already selected and this card is not selected → start battle
-      if (selectedCardIds.length === 3 && !selectedCardIds.includes(card.id)) {
+      if (selectedCardIds.length === 3) {
         handleStartBattle();
         return;
       }
-      // Toggle selection
+      if (isOnButton) return;
+      const card = availableCards[cur];
+      if (!card) return;
       toggleSelectCard(card.id);
       play('confirm');
-      // Auto-start when 3 selected after this toggle
-      if (selectedCardIds.length === 2 && !selectedCardIds.includes(card.id)) {
-        setTimeout(() => handleStartBattle(), 200);
-      }
     }
-  }, [back, play, availableCards, toggleSelectCard, selectedCardIds, handleStartBattle]);
+  }, [back, play, availableCards, toggleSelectCard, selectedCardIds, handleStartBattle, BUTTON_INDEX, cols]);
 
   useInputManager(handleAction);
 
+  // Button focus animation
+  useEffect(() => {
+    if (!buttonRef.current) return;
+    try {
+      gsap.to(buttonRef.current, {
+        scale: focus === BUTTON_INDEX ? 1.05 : 1,
+        borderColor: focus === BUTTON_INDEX ? '#60a5fa' : selectedCardIds.length === 3 ? '#60a5fa' : '#4b5563',
+        duration: 0.2,
+        ease: 'power2.out',
+      });
+    } catch { /* GSAP no disponible */ }
+  }, [focus, selectedCardIds.length, BUTTON_INDEX]);
+
+  // Card entrance animation
   useEffect(() => {
     if (!containerRef.current) return;
     try {
@@ -210,20 +248,24 @@ export function TeamSelectScreen() {
 
       <div style={{ position: 'relative', zIndex: 10, marginTop: '1.5rem' }}>
         <button
+          ref={buttonRef}
           onClick={handleStartBattle}
           disabled={selectedCardIds.length !== 3 || loading}
+          className={focus === BUTTON_INDEX ? 'ts-btn-focused' : ''}
           style={{
             padding: '0.75rem 3rem',
             fontSize: '1.25rem',
             fontWeight: 700,
             background: selectedCardIds.length === 3 && !loading ? '#2563eb' : '#374151',
             color: 'white',
-            border: selectedCardIds.length === 3 ? '2px solid #60a5fa' : '2px solid #4b5563',
+            border: '2px solid',
+            borderColor: focus === BUTTON_INDEX ? '#60a5fa' : selectedCardIds.length === 3 ? '#60a5fa' : '#4b5563',
             borderRadius: '4px',
             transform: 'skewX(-10deg)',
             cursor: selectedCardIds.length === 3 && !loading ? 'pointer' : 'not-allowed',
             letterSpacing: '0.1em',
             opacity: loading ? 0.6 : 1,
+            transition: 'none',
           }}
         >
           {loading ? 'INICIANDO...' : 'INICIAR BATALLA'}
