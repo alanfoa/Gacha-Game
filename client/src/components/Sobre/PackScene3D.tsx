@@ -13,11 +13,12 @@ interface PackScene3DProps {
   skip: boolean;
 }
 
+// Flap shape: base at y=0, tip at y=0.5
 const FLAP_SHAPE = (() => {
   const s = new THREE.Shape();
   s.moveTo(-0.75, 0);
   s.lineTo(0.75, 0);
-  s.lineTo(0, 0.65);
+  s.lineTo(0, 0.5);
   s.closePath();
   return s;
 })();
@@ -27,7 +28,8 @@ const PARTICLE_COUNT = 150;
 
 function Envelope3D({ open }: { open: boolean }) {
   const bodyRef = useRef<THREE.Mesh>(null);
-  const flapRef = useRef<THREE.Mesh>(null);
+  const flapGroupRef = useRef<THREE.Group>(null);
+  const flapMeshRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
   const openRef = useRef(open);
   openRef.current = open;
@@ -40,23 +42,24 @@ function Envelope3D({ open }: { open: boolean }) {
 
   useEffect(() => {
     const body = bodyRef.current;
-    const flap = flapRef.current;
-    if (!body || !flap) return;
+    const flapGroup = flapGroupRef.current;
+    if (!body || !flapGroup) return;
 
     const tweens: gsap.core.Tween[] = [];
 
     if (open) {
-      tweens.push(gsap.to(flap.rotation, { x: -Math.PI * 0.6, duration: 0.3, ease: 'back.out(1.5)' }));
+      // Rotate flapGroup from its hinge (bottom of triangle)
+      tweens.push(gsap.to(flapGroup.rotation, { x: -Math.PI * 0.6, duration: 0.3, ease: 'back.out(1.5)' }));
       tweens.push(gsap.to(body.scale, { x: 1.3, y: 1.3, z: 1.3, duration: 0.25, ease: 'power2.out' }));
       tweens.push(gsap.to(body.position, { z: 0.3, duration: 0.25, ease: 'power2.out' }));
       tweens.push(gsap.to(body.material, { opacity: 0, duration: 0.2, delay: 0.4 }));
-      tweens.push(gsap.to(flap.material, { opacity: 0, duration: 0.2, delay: 0.4 }));
+      tweens.push(gsap.to(flapGroup, { opacity: 0, duration: 0.2, delay: 0.4 }));
     } else {
-      gsap.set(flap.rotation, { x: 0 });
+      gsap.set(flapGroup.rotation, { x: 0 });
       gsap.set(body.scale, { x: 1, y: 1, z: 1 });
       gsap.set(body.position, { z: 0 });
       gsap.set(body.material, { opacity: 1 });
-      gsap.set(flap.material, { opacity: 1 });
+      gsap.set(flapGroup, { opacity: 1 });
     }
 
     return () => { tweens.forEach((t) => t.kill()); };
@@ -68,10 +71,14 @@ function Envelope3D({ open }: { open: boolean }) {
         <boxGeometry args={[1.6, 2.2, 0.15]} />
         <meshStandardMaterial color="#3b82f6" metalness={0.6} roughness={0.3} transparent opacity={1} />
       </mesh>
-      <mesh ref={flapRef} position={[0, 1.1, 0]}>
-        <shapeGeometry args={[FLAP_SHAPE]} />
-        <meshStandardMaterial color="#60a5fa" metalness={0.5} roughness={0.3} side={THREE.DoubleSide} transparent opacity={1} />
-      </mesh>
+      {/* Flap pivot group: positioned at top of envelope body + half its height */}
+      <group ref={flapGroupRef} position={[0, 1.1, 0]}>
+        {/* Mesh offset down by half the height so base of triangle is at group origin (hinge) */}
+        <mesh ref={flapMeshRef} position={[0, -0.25, 0]}>
+          <shapeGeometry args={[FLAP_SHAPE]} />
+          <meshStandardMaterial color="#60a5fa" metalness={0.5} roughness={0.3} side={THREE.DoubleSide} transparent opacity={1} />
+        </mesh>
+      </group>
     </group>
   );
 }
@@ -287,7 +294,10 @@ function SceneContent({ cardRarity, cardName, cardId, cardStats, skip }: PackSce
 
     setPhase('opening');
 
-    const tl = gsap.timeline({
+    const tl = gsap.timeline();
+
+    tl.to({}, {
+      duration: 0.25,
       onComplete: () => {
         setPhase('revealed');
         setParticleRarity(cardRarity);
@@ -296,8 +306,6 @@ function SceneContent({ cardRarity, cardName, cardId, cardStats, skip }: PackSce
         setTimeout(() => { setShakeIntensity(0); setParticleRarity(null); }, 2000);
       },
     });
-
-    tl.call(() => setPhase('revealed'), [], '+=0.65');
 
     timelineRef.current = tl;
 

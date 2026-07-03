@@ -1,5 +1,6 @@
 // Mapa: new card ID -> old image filename (without extension)
-const IMAGE_MAP: Record<string, string> = {
+// 18 legacy cards still use old filenames; new cards use cardId directly (e.g. "c01" -> "/characters/c01.webp")
+const LEGACY_MAP: Record<string, string> = {
   e01: 'tanjiro_c',
   r01: 'nezuko_c',
   r02: 'zenitsu_c',
@@ -34,7 +35,7 @@ export function loadCardImage(cardId: string): Promise<HTMLImageElement | null> 
   const existing = pending.get(cardId);
   if (existing) return existing;
 
-  const filename = IMAGE_MAP[cardId] ?? cardId;
+  const filename = LEGACY_MAP[cardId] ?? cardId;
 
   const p = new Promise<HTMLImageElement | null>((resolve) => {
     const img = new Image();

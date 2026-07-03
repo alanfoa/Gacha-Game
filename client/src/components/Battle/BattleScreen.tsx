@@ -393,7 +393,7 @@ export function BattleScreen() {
     const isUltimate = entry.skillId?.startsWith('ult_');
     const isStrike = entry.skillId?.startsWith('skill_');
     const isMagic = entry.action === 'MAGIC';
-    const isPhysical = entry.action === 'ATTACK';
+
 
     // --- Enhanced animations per skill type ---
     if (targetCardEl && entry.damage > 0) {

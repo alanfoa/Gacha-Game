@@ -110,7 +110,7 @@ A medida que se completen los módulos, marcar con [x] para el tilde verde.
 
 ## 🖼️ FASE 7: Reemplazo de Assets (Al Final)
 
-- [ ] **7.1. Imágenes de Personajes Reales**
+- [x] **7.1. Imágenes de Personajes Reales**
 - [ ] **7.2. Sonidos Reales**
 - [x] **7.3. Música de Fondo (BGM)**
   - "Color Your Night" (Persona 3 Reload) en loop con Howler.js desde `/audio/bgm.ogg`.
@@ -340,8 +340,8 @@ A medida que se completen los módulos, marcar con [x] para el tilde verde.
 - [x] **1.1 Pantalla de resultado de batalla**
   - Mover `BattleResult` al centro como modal con overlay oscuro
   - Mostrar: VICTORIA/DERROTA, monedas, botón VOLVER AL MENÚ siempre visible
-- [ ] **1.2 Animación de sobres**
-  - Diagnosticar y corregir PackScene3D + transiciones
+- [x] **1.2 Animación de sobres**
+  - Corregido PackScene3D: flap con pivot correcto (base de triángulo como bisagra), timeline no vacío con 0.25s de duración, fase 'revealed' se dispara después de la animación del sobre
 - [x] **1.3 Cards consistentes**
   - Ya implementado: unificación con `size` en vez de `compact`
 
@@ -480,7 +480,7 @@ interface Card {
 
 - [x] **4.1.** Reset total: se borra la DB, inventario, monedas y progreso
 - [x] **4.2.** Las cartas viejas (26) se reemplazan por el nuevo catálogo (75 cartas)
-- [ ] **4.3.** Se regeneran las imágenes desde la API de Jikan
+- [x] **4.3.** Se regeneran las imágenes desde la API de Jikan
 
 ### FASE 5 — Animaciones
 
