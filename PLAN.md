@@ -484,7 +484,7 @@ interface Card {
 
 ### FASE 5 — Animaciones
 
-- [ ] **5.1. Ataque físico** — impacto/zoom simple en la carta objetivo
-- [ ] **5.2. Magia** — partículas del color del elemento
-- [ ] **5.3. Strike** — animación más elaborada + brillo + screen shake leve
-- [ ] **5.4. Ultimate** — cámara lenta, filtro de color, pantalla vibra, partículas masivas
+- [x] **5.1. Ataque físico** — impacto/zoom simple en la carta objetivo
+- [x] **5.2. Magia** — partículas del color del elemento + flotación
+- [x] **5.3. Strike** — animación más elaborada + brillo + screen shake medio
+- [x] **5.4. Ultimate** — cámara lenta (scale pulse), filtro púrpura, pantalla vibra fuerte
