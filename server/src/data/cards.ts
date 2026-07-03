@@ -147,7 +147,7 @@ export const cards: Card[] = [
   // e03
   { id: 'e03', name: 'Luffy (Base)', anime: 'One Piece', rarity: Rarity.Epic, stats: S(58, 44, 30, 18, 70), hp: 200, maxMana: 100, element: Element.Light, attackName: 'Gomu Gomu no Pistol', attackCost: 0, attackCooldown: 0, magicName: 'Red Hawk', magicCost: 24, magicCooldown: 2, skillName: 'Elephant Gun', skillCost: 36, skillCooldown: 3 },
   // e04
-  { id: 'e04', name: 'Eren Titán', anime: 'Attack on Titan', rarity: Rarity.Epic, stats: S(62, 52, 22, 10, 58), hp: 210, maxMana: 100, element: Element.Earth, attackName: 'Golpe de Titán', attackCost: 0, attackCooldown: 0, magicName: 'Endurecimiento', magicCost: 20, magicCooldown: 2, skillName: 'Rugido de Ataque', skillCost: 34, skillCooldown: 3 },
+  { id: 'e04', name: 'Eren (Titán)', anime: 'Attack on Titan', rarity: Rarity.Epic, stats: S(62, 52, 22, 10, 58), hp: 210, maxMana: 100, element: Element.Earth, attackName: 'Golpe de Titán', attackCost: 0, attackCooldown: 0, magicName: 'Endurecimiento', magicCost: 20, magicCooldown: 2, skillName: 'Rugido de Ataque', skillCost: 34, skillCooldown: 3 },
   // e05
   { id: 'e05', name: 'Joseph Joestar', anime: "JoJo's", rarity: Rarity.Epic, stats: S(48, 40, 48, 24, 72), hp: 185, maxMana: 100, element: Element.Light, attackName: 'Golpe con Hilos', attackCost: 0, attackCooldown: 0, magicName: 'Hamon Overdrive', magicCost: 22, magicCooldown: 1, skillName: 'Elástico de Hamon', skillCost: 32, skillCooldown: 2 },
   // e06
@@ -227,7 +227,7 @@ export const cards: Card[] = [
     skillName: 'Decimotercera Postura', skillCost: 40, skillCooldown: 3,
     ultimateName: 'Mundo Transparente: Tajo de la Cabeza del Dragón', ultimateCost: 68, ultimateCooldown: 5 },
   // l08
-  { id: 'l08', name: 'Eren (Titán Fundador)', anime: 'Attack on Titan', rarity: Rarity.Legendary, stats: S(90, 80, 50, 16, 90), hp: 275, maxMana: 130, element: Element.Earth,
+  { id: 'l08', name: 'Eren (Titán)', anime: 'Attack on Titan', rarity: Rarity.Legendary, stats: S(90, 80, 50, 16, 90), hp: 275, maxMana: 130, element: Element.Earth,
     attackName: 'Pisotón del Retumbar', attackCost: 0, attackCooldown: 0,
     magicName: 'Control de Titanes Puros', magicCost: 28, magicCooldown: 2,
     skillName: 'Endurecimiento de Cristal Divino', skillCost: 38, skillCooldown: 3,

@@ -76,11 +76,38 @@ export interface BattleLogEntry {
   message: string;
 }
 
+export interface Mission {
+  id: string;
+  name: string;
+  description: string;
+  progress: number;
+  goal: number;
+  completed: boolean;
+  claimed: boolean;
+  reward: number;
+}
+
+export interface PackTypeInfo {
+  id: string;
+  name: string;
+  cost: number;
+  cardCount: number;
+  guaranteeRarity: string | null;
+  color: string;
+  badgeLabel: string;
+  description: string;
+}
+
 interface PullResult {
   card: CardData;
   isNew: boolean;
   coinsEarned: number;
   pityActive: boolean;
+  user: UserProfile;
+}
+
+interface OpenPackResult {
+  cards: { card: CardData; isNew: boolean }[];
   user: UserProfile;
 }
 
@@ -90,8 +117,13 @@ interface GameState {
   inventory: string[];
   unlockedCards: string[];
   allCards: CardData[];
+  packTypes: PackTypeInfo[];
   loading: boolean;
   error: string | null;
+
+  // Missions
+  missions: Mission[];
+  missionDate: string;
 
   // Battle state
   selectedCardIds: string[];
@@ -106,9 +138,12 @@ interface GameState {
   register: (name: string) => Promise<void>;
   fetchProfile: () => Promise<void>;
   fetchCards: () => Promise<void>;
-  openPack: () => Promise<PullResult | null>;
+  fetchPacks: () => Promise<void>;
+  openPack: (packType?: string) => Promise<OpenPackResult | null>;
   importSave: (json: string) => boolean;
   logout: () => void;
+  fetchMissions: () => Promise<void>;
+  claimMission: (missionId: string) => Promise<void>;
 
   // Battle actions
   toggleSelectCard: (cardId: string) => void;
@@ -152,8 +187,12 @@ export const useGameStore = create<GameState>()(
       inventory: [],
       unlockedCards: [],
       allCards: [],
+      packTypes: [],
       loading: false,
       error: null,
+
+      missions: [],
+      missionDate: '',
 
       selectedCardIds: [],
       battleId: null,
@@ -173,6 +212,7 @@ export const useGameStore = create<GameState>()(
           });
           set({ token: data.token, user: data.user, loading: false });
           await get().fetchCards();
+          await get().fetchPacks();
         } catch (e) {
           set({ loading: false, error: (e as Error).message });
         }
@@ -206,18 +246,28 @@ export const useGameStore = create<GameState>()(
         }
       },
 
-      openPack: async () => {
+      fetchPacks: async () => {
+        try {
+          const data = await api<{ packs: PackTypeInfo[] }>('/packs');
+          set({ packTypes: data.packs });
+        } catch { /* non-critical */ }
+      },
+
+      openPack: async (packType = 'basico') => {
         const { token } = get();
         if (!token) return null;
         set({ loading: true, error: null });
         try {
-          const data = await api<PullResult>('/open', token, { method: 'POST' });
+          const data = await api<OpenPackResult>('/open', token, {
+            method: 'POST',
+            body: JSON.stringify({ packType }),
+          });
+          const cardIds = data.cards.map((c) => c.card.id);
+          const newIds = data.cards.filter((c) => c.isNew).map((c) => c.card.id);
           set((s) => ({
             user: data.user,
-            inventory: [...s.inventory, data.card.id],
-            unlockedCards: data.isNew
-              ? [...s.unlockedCards, data.card.id]
-              : s.unlockedCards,
+            inventory: [...s.inventory, ...cardIds],
+            unlockedCards: [...new Set([...s.unlockedCards, ...newIds])],
             loading: false,
           }));
           return data;
@@ -238,8 +288,37 @@ export const useGameStore = create<GameState>()(
         }
       },
 
+      fetchMissions: async () => {
+        const { token } = get();
+        if (!token) return;
+        try {
+          const data = await api<{ missions: Mission[]; date: string }>('/missions', token);
+          set({ missions: data.missions, missionDate: data.date });
+        } catch { /* non-critical */ }
+      },
+
+      claimMission: async (missionId: string) => {
+        const { token } = get();
+        if (!token) return;
+        try {
+          const data = await api<{
+            claimed: boolean; rewardType: string; rewardAmount: number;
+            freePack: boolean; user: UserProfile;
+          }>('/missions/claim', token, {
+            method: 'POST',
+            body: JSON.stringify({ missionId }),
+          });
+          set((s) => ({
+            user: data.user,
+            missions: s.missions.map((m) =>
+              m.id === missionId ? { ...m, claimed: true } : m
+            ),
+          }));
+        } catch { /* ignore */ }
+      },
+
       logout: () => {
-        set({ token: null, user: null, inventory: [], unlockedCards: [], allCards: [] });
+        set({ token: null, user: null, inventory: [], unlockedCards: [], allCards: [], missions: [], missionDate: '' });
       },
 
       toggleSelectCard: (cardId: string) => {

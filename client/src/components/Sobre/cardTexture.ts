@@ -291,7 +291,7 @@ export function getCardCanvas(
   ctx.fillStyle = styles.metal1;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillText(nameStr, bx + 6 * scale, by + nameH / 2);
+  ctx.fillText(nameStr, bx + 6 * scale + (by + nameH / 2) * tanSkew, by + nameH / 2);
   ctx.textBaseline = 'alphabetic';
 
   return canvas;

@@ -7,6 +7,7 @@ import { useSound } from '../../hooks/useSound';
 const OPTIONS = [
   { label: 'ABRIR SOBRE', screen: 'pack' as const },
   { label: 'BATALLA', screen: 'teamSelect' as const },
+  { label: 'MISIONES', screen: 'missions' as const },
   { label: 'MI ÁLBUM', screen: 'album' as const },
   { label: 'OPCIONES', screen: 'options' as const },
 ];

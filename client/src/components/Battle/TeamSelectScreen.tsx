@@ -141,6 +141,16 @@ export function TeamSelectScreen() {
     } catch { /* GSAP no disponible */ }
   }, [availableCards.length]);
 
+  // Auto-scroll on focus change
+  useEffect(() => {
+    if (focus === BUTTON_INDEX) {
+      buttonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
+    const el = document.querySelector(`[data-select-index="${focus}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  }, [focus, BUTTON_INDEX]);
+
   return (
     <div
       ref={containerRef}
@@ -156,6 +166,21 @@ export function TeamSelectScreen() {
         overflow: 'hidden',
       }}
     >
+      <style>{`
+        .team-select-grid::-webkit-scrollbar {
+          width: 6px;
+        }
+        .team-select-grid::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .team-select-grid::-webkit-scrollbar-thumb {
+          background: #374151;
+          border-radius: 3px;
+        }
+        .team-select-grid::-webkit-scrollbar-thumb:hover {
+          background: #4b5563;
+        }
+      `}</style>
       <div
         style={{
           position: 'absolute',
@@ -222,21 +247,25 @@ export function TeamSelectScreen() {
           flex: 1,
           alignContent: 'start',
           overflowY: 'auto',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#374151 transparent',
           padding: '0.5rem',
         }}
+        className="team-select-grid"
       >
         {availableCards.map((card, i) => {
           const isSelected = selectedCardIds.includes(card.id);
           const isFocused = i === focus;
           return (
-            <CardSelectButton
-              key={card.id}
-              card={card}
-              isSelected={isSelected}
-              isFocused={isFocused}
-              onClick={() => { toggleSelectCard(card.id); play('confirm'); }}
-              onHover={() => { focusRef.current = i; setFocus(i); }}
-            />
+            <div key={card.id} data-select-index={i}>
+              <CardSelectButton
+                card={card}
+                isSelected={isSelected}
+                isFocused={isFocused}
+                onClick={() => { toggleSelectCard(card.id); play('confirm'); }}
+                onHover={() => { focusRef.current = i; setFocus(i); }}
+              />
+            </div>
           );
         })}
         {availableCards.length === 0 && (

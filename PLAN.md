@@ -488,3 +488,77 @@ interface Card {
 - [x] **5.2. Magia** — partículas del color del elemento + flotación
 - [x] **5.3. Strike** — animación más elaborada + brillo + screen shake medio
 - [x] **5.4. Ultimate** — cámara lenta (scale pulse), filtro púrpura, pantalla vibra fuerte
+
+---
+
+## 🏪 FASE 14: Tienda de Sobres + Contenido del Sobre
+
+- [x] **14.1. Tipos de sobre (server-side)**
+
+  | Tipo | Costo | Cartas | Mínimo garantizado | Badge |
+  |------|-------|--------|--------------------|-------|
+  | Básico | 100 🪙 | 1 | — | COMÚN (azul) |
+  | Deluxe | 300 🪙 | 3 | RARO+ | RARO+ (plata) |
+  | Premium | 600 🪙 | 5 | ÉPICO+ | ÉPICO+ (oro) |
+  | Legendario | 1000 🪙 | 7 | LEGENDARIO | ★ LEGENDARIO (rojo) |
+
+  - `server/src/data/packs.ts` — definiciones
+  - `GET /api/packs` devuelve los tipos
+
+- [x] **14.2. Probabilidades con garantía**
+  - `pullCardWithGuarantee()` en `probabilities.ts`
+  - La última carta del pack se fuerza a la rareza mínima
+
+- [x] **14.3. POST /api/open acepta packType**
+  - Devuelve `{ cards: { card, isNew }[], user }` en vez de una sola carta
+  - Inserta todas las cartas en inventory dentro de una transacción
+  - Actualiza pity/totalPulls/legendaryCount por cada carta
+
+- [x] **14.4. Store en grilla 2×2**
+  - 4 tipos de sobre en cuadrícula con badge de rareza, costo y cantidad
+  - Color del badge según tipo: azul / plata / oro / rojo
+  - Navegación completa con teclado (↑↓←→ + Enter)
+  - Botón VOLVER debajo
+
+- [x] **14.5. Color dinámico del sobre 3D**
+  - Cada tipo de sobre pasa `packColor` a PackScene3D
+  - Envelope3D usa el color del tipo (azul/plata/oro/rojo)
+
+- [x] **14.6. Flujo de apertura**
+  1. Store → click pack → `phase='opening'` (animación 3D)
+  2. → `phase='revealed'` (mejor carta + botón "VER CONTENIDO DEL SOBRE")
+  3. → `phase='contents'` (fan-out 3D con navegación ← →)
+  4. → "GUARDAR EN EL ÁLBUM" → vuelve a store
+
+- [x] **14.7. Fan-out 3D (PackFan)**
+  - Todas las cartas en abanico con Three.js
+  - Carta seleccionada se acerca a cámara + escala 1.15
+  - Navegación ← → entre cartas con animación smooth
+  - Stats de la carta seleccionada en overlay inferior
+  - Sombra/copia de cartas no seleccionadas para profundidad
+
+---
+
+## 🔙 REVERTIR DESPUÉS DEL TESTING
+
+### Cosas que cambiar para volver a la lógica normal:
+
+1. **`server/src/db/schema.ts`** — Cambiar `DEFAULT 999999` → `DEFAULT 500` (línea 18, columna `coins`)
+2. **`server/src/routes/gacha.ts`** — Cambiar `coins: 999999` → `coins: 500` (línea 52, respuesta de registro)
+3. **Eliminar `server/src/routes/debug.ts`** — Archivo entero de debug
+4. **`server/src/index.ts`** — Eliminar `import debugRouter` y `app.use('/api', debugRouter)` (líneas 6 y 16)
+5. **Opcional: reiniciar DB** — Borrar `server/data.db` para que los nuevos registros tomen el DEFAULT corregido
+
+⚠️ Los cambios de PackScene3D (Canvas siempre montado, body scale [0,0,0], delay 0.05) **NO** se revierten — esos son fixes permanentes del bug "cuadrado feo".
+
+### Partida guardada
+
+El token del usuario Alan está en `Partida/gacha-persona-save-Alan.json`:
+```
+token: 35a2e7d6-ed71-4439-b0d6-562505f6e6f2
+```
+Para asignar 999999 coins ahora mismo, abrí consola del browser y pegá:
+```js
+fetch('/api/debug/coins',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:'35a2e7d6-ed71-4439-b0d6-562505f6e6f2'})}).then(r=>r.json()).then(console.log)
+```
+Después recargá la página.

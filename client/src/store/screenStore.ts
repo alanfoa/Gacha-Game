@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Screen = 'menu' | 'pack' | 'album' | 'options' | 'teamSelect' | 'battle';
+export type Screen = 'menu' | 'pack' | 'album' | 'options' | 'teamSelect' | 'battle' | 'missions';
 
 interface ScreenState {
   current: Screen;

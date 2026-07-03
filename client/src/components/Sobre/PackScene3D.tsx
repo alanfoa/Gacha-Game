@@ -4,6 +4,15 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 import { getCardCanvas, RARITY_STYLES, type CardCanvasStats } from './cardTexture';
 import { loadCardImage } from '../../utils/cardImage';
+import { PackFan } from './PackFan';
+
+interface FanCard {
+  id: string;
+  name: string;
+  rarity: string;
+  stats?: { attack: number; defense: number; magic: number; luck: number; speed: number };
+  isNew: boolean;
+}
 
 interface PackScene3DProps {
   cardRarity: string | null;
@@ -11,6 +20,11 @@ interface PackScene3DProps {
   cardId: string | null;
   cardStats: CardCanvasStats | null;
   skip: boolean;
+  packColor?: string;
+  mode?: 'envelope' | 'fan';
+  fanCards?: FanCard[];
+  fanSelectedIndex?: number;
+  onFanSelect?: (index: number) => void;
 }
 
 // Flap shape: base at y=0, tip at y=0.5
@@ -26,7 +40,7 @@ const FLAP_SHAPE = (() => {
 const CAMERA_PROPS = { position: [0, 0, 6] as [number, number, number], fov: 50 };
 const PARTICLE_COUNT = 150;
 
-function Envelope3D({ open }: { open: boolean }) {
+function Envelope3D({ open, color }: { open: boolean; color: string }) {
   const bodyRef = useRef<THREE.Mesh>(null);
   const flapGroupRef = useRef<THREE.Group>(null);
   const flapMeshRef = useRef<THREE.Mesh>(null);
@@ -47,19 +61,25 @@ function Envelope3D({ open }: { open: boolean }) {
 
     const tweens: gsap.core.Tween[] = [];
 
+    const flapMat = flapMeshRef.current?.material;
+
     if (open) {
+      // Make envelope visible for the opening animation
+      gsap.set(body.material, { opacity: 1 });
+      if (flapMat) gsap.set(flapMat, { opacity: 1 });
+
       // Rotate flapGroup from its hinge (bottom of triangle)
       tweens.push(gsap.to(flapGroup.rotation, { x: -Math.PI * 0.6, duration: 0.3, ease: 'back.out(1.5)' }));
       tweens.push(gsap.to(body.scale, { x: 1.3, y: 1.3, z: 1.3, duration: 0.25, ease: 'power2.out' }));
       tweens.push(gsap.to(body.position, { z: 0.3, duration: 0.25, ease: 'power2.out' }));
-      tweens.push(gsap.to(body.material, { opacity: 0, duration: 0.2, delay: 0.4 }));
-      tweens.push(gsap.to(flapGroup, { opacity: 0, duration: 0.2, delay: 0.4 }));
+      tweens.push(gsap.to(body.material, { opacity: 0, duration: 0.2, delay: 0.05 }));
+      if (flapMat) tweens.push(gsap.to(flapMat, { opacity: 0, duration: 0.2, delay: 0.05 }));
     } else {
       gsap.set(flapGroup.rotation, { x: 0 });
-      gsap.set(body.scale, { x: 1, y: 1, z: 1 });
+      gsap.set(body.scale, { x: 0, y: 0, z: 0 });
       gsap.set(body.position, { z: 0 });
-      gsap.set(body.material, { opacity: 1 });
-      gsap.set(flapGroup, { opacity: 1 });
+      gsap.set(body.material, { opacity: 0 });
+      if (flapMat) gsap.set(flapMat, { opacity: 0 });
     }
 
     return () => { tweens.forEach((t) => t.kill()); };
@@ -67,16 +87,16 @@ function Envelope3D({ open }: { open: boolean }) {
 
   return (
     <group ref={groupRef}>
-      <mesh ref={bodyRef} position={[0, 0, 0]}>
+      <mesh ref={bodyRef} position={[0, 0, 0]} scale={[0, 0, 0]}>
         <boxGeometry args={[1.6, 2.2, 0.15]} />
-        <meshStandardMaterial color="#3b82f6" metalness={0.6} roughness={0.3} transparent opacity={1} />
+        <meshStandardMaterial color={color} metalness={0.6} roughness={0.3} transparent opacity={1} />
       </mesh>
       {/* Flap pivot group: positioned at top of envelope body + half its height */}
       <group ref={flapGroupRef} position={[0, 1.1, 0]}>
         {/* Mesh offset down by half the height so base of triangle is at group origin (hinge) */}
         <mesh ref={flapMeshRef} position={[0, -0.25, 0]}>
           <shapeGeometry args={[FLAP_SHAPE]} />
-          <meshStandardMaterial color="#60a5fa" metalness={0.5} roughness={0.3} side={THREE.DoubleSide} transparent opacity={1} />
+          <meshStandardMaterial color={color} metalness={0.5} roughness={0.3} side={THREE.DoubleSide} transparent opacity={1} />
         </mesh>
       </group>
     </group>
@@ -119,13 +139,16 @@ function RevealCard3D({ rarity, name, cardId, stats, visible }: { rarity: string
     };
   }, [draw, cardId, stats]);
 
+  // Keep scale at 0 until we're ready to animate in
   useEffect(() => {
-    if (!meshRef.current || !visible) return;
+    if (!meshRef.current) return;
     const mesh = meshRef.current;
 
     gsap.set(mesh.position, { x: 0, y: 0, z: 0 });
-    gsap.set(mesh.scale, { x: 0.1, y: 0.1, z: 0.1 });
+    gsap.set(mesh.scale, { x: 0, y: 0, z: 0 });
     gsap.set(mesh.rotation, { y: 0 });
+
+    if (!visible) return;
 
     const tweens = [
       gsap.to(mesh.rotation, { y: Math.PI * 2, duration: 0.6, ease: 'power2.out' }),
@@ -141,7 +164,7 @@ function RevealCard3D({ rarity, name, cardId, stats, visible }: { rarity: string
   if (!texture) return null;
 
   return (
-    <mesh ref={meshRef} visible={visible}>
+    <mesh ref={meshRef} scale={[0, 0, 0]}>
       <planeGeometry args={[1.2, 1.68]} />
       <meshStandardMaterial
         map={texture}
@@ -264,7 +287,7 @@ function CameraShake({ intensity }: { intensity: number }) {
   return null;
 }
 
-function SceneContent({ cardRarity, cardName, cardId, cardStats, skip }: PackScene3DProps) {
+function SceneContent({ cardRarity, cardName, cardId, cardStats, skip, packColor, mode = 'envelope', fanCards, fanSelectedIndex, onFanSelect }: PackScene3DProps) {
   const [phase, setPhase] = useState<'idle' | 'opening' | 'revealed'>('idle');
   const [particleRarity, setParticleRarity] = useState<string | null>(null);
   const [shakeIntensity, setShakeIntensity] = useState(0);
@@ -317,6 +340,23 @@ function SceneContent({ cardRarity, cardName, cardId, cardStats, skip }: PackSce
     };
   }, [cardRarity, cardName, skip]);
 
+  if (mode === 'fan' && fanCards) {
+    return (
+      <>
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[5, 5, 5]} intensity={0.8} />
+        <pointLight position={[0, 0, 6]} intensity={1.0} color="#60a5fa" />
+        <pointLight position={[-3, -2, 4]} intensity={0.5} color="#3b82f6" />
+        <spotLight position={[0, 3, 4]} angle={0.3} penumbra={0.5} intensity={1.2} color="#ffffff" />
+        <PackFan
+          cards={fanCards}
+          selectedIndex={fanSelectedIndex ?? 0}
+          onSelect={onFanSelect ?? (() => {})}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <ambientLight intensity={0.6} />
@@ -324,7 +364,7 @@ function SceneContent({ cardRarity, cardName, cardId, cardStats, skip }: PackSce
       <pointLight position={[0, 0, 6]} intensity={1.0} color="#60a5fa" />
       <pointLight position={[-3, -2, 4]} intensity={0.5} color="#3b82f6" />
       <spotLight position={[0, 3, 4]} angle={0.3} penumbra={0.5} intensity={1.2} color="#ffffff" />
-      <Envelope3D open={phase !== 'idle'} />
+      <Envelope3D open={phase !== 'idle'} color={packColor ?? '#3b82f6'} />
       {cardRarity && cardName && (
         <RevealCard3D rarity={cardRarity} name={cardName} cardId={cardId} stats={cardStats} visible={phase === 'revealed'} />
       )}

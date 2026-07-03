@@ -80,7 +80,6 @@ export function AlbumScreen() {
         background: '#0f0f1a',
         padding: '2rem',
         overflow: 'auto',
-        willChange: 'transform',
       }}
     >
       {/* Header */}
@@ -136,8 +135,8 @@ export function AlbumScreen() {
         }
         .album-card:hover {
           transform: scale(1.07) translateY(-4px);
-          box-shadow: 0 8px 32px rgba(96,165,250,0.15);
-          outline: 2px solid rgba(96,165,250,0.5);
+          box-shadow: 0 0 24px rgba(96,165,250,0.4), 0 8px 32px rgba(96,165,250,0.15);
+          outline: 3px solid #93bbfc;
           outline-offset: 3px;
         }
         .album-card:active {
@@ -164,9 +163,10 @@ export function AlbumScreen() {
               onClick={() => { setFocusIndex(i); handleCardClick(card); }}
               className="album-card"
               style={{
-                opacity: owned ? 1 : 0.2,
-                outline: isFocused ? '3px solid #3b82f6' : '3px solid transparent',
-                outlineOffset: '2px',
+                opacity: owned ? 1 : (isFocused ? 0.6 : 0.2),
+                outline: isFocused ? `3px solid ${owned ? '#93bbfc' : '#fbbf24'}` : '3px solid transparent',
+                outlineOffset: '3px',
+                boxShadow: isFocused ? `0 0 24px ${owned ? 'rgba(96,165,250,0.5)' : 'rgba(251,191,36,0.4)'}` : 'none',
               }}
             >
               <PlaceholderCard

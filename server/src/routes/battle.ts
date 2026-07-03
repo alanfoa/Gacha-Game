@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import db from '../db/schema.js';
 import { cards } from '../data/cards.js';
 import { generateEnemyTeam, processTurn, createBattleCard, type BattleCard, type BattleAction } from '../logic/battle.js';
+import { incrementMission } from '../logic/missions.js';
 
 interface DbUser {
   id: string; name: string; coins: number; pity_count: number;
@@ -117,6 +118,8 @@ router.post('/battle/action', (req, res) => {
     if (result.winner === 'player') {
       db.prepare('UPDATE users SET coins = coins + ?, win_streak = win_streak + 1 WHERE id = ?')
         .run(result.coinsEarned, user.id);
+      incrementMission(user.id, 'win_battles');
+      incrementMission(user.id, 'earn_coins', result.coinsEarned);
       sessions.delete(battleId);
     } else if (result.winner === 'enemy') {
       const loseCost = 10;

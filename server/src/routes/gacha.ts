@@ -2,8 +2,10 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import db from '../db/schema.js';
-import { pullCard } from '../logic/probabilities.js';
+import { pullCard, pullCardWithGuarantee } from '../logic/probabilities.js';
 import { cards, Rarity } from '../data/cards.js';
+import { PACK_TYPES } from '../data/packs.js';
+import { incrementMission } from '../logic/missions.js';
 
 interface DbUser {
   id: string; name: string; coins: number; pity_count: number;
@@ -28,7 +30,6 @@ function sendError(res: Response, status: number, message: string) {
 
 const router = Router();
 
-const PACK_COST = 100;
 const DUPLICATE_REWARD = 25;
 
 router.post('/register', (req, res) => {
@@ -48,7 +49,7 @@ router.post('/register', (req, res) => {
     db.prepare('INSERT INTO users (id, name, token) VALUES (?, ?, ?)').run(id, trimmed, token);
 
     res.json({
-      user: { id, name: trimmed, coins: 500, pityCount: 0, totalPulls: 0, legendaryCount: 0 },
+      user: { id, name: trimmed, coins: 999999, pityCount: 0, totalPulls: 0, legendaryCount: 0 },
       token,
     });
   } catch {
@@ -85,40 +86,66 @@ router.get('/profile', (req, res) => {
   }
 });
 
+router.get('/packs', (_req, res) => {
+  res.json({ packs: PACK_TYPES });
+});
+
 router.post('/open', (req, res) => {
   const user = getUser(req);
   if (!user) return sendError(res, 401, 'Token invalido');
 
-  if (user.coins < PACK_COST) {
+  const packId: string = req.body.packType ?? 'basico';
+  const packType = PACK_TYPES.find((p) => p.id === packId);
+  if (!packType) return sendError(res, 400, 'Tipo de sobre invalido');
+
+  if (user.coins < packType.cost) {
     return sendError(res, 400, 'Monedas insuficientes');
   }
-
-  const result = pullCard(user.pity_count);
 
   try {
     db.exec('BEGIN');
 
-    const existing = db.prepare(
-      'SELECT id FROM inventory WHERE user_id = ? AND card_id = ? LIMIT 1'
-    ).get(user.id, result.card.id) as { id: number } | undefined;
+    // Pull all cards for this pack
+    const results: { card: typeof cards[0]; isNew: boolean }[] = [];
+    let totalCoinsEarned = 0;
+    let newPityCount = user.pity_count;
+    let newTotalPulls = user.total_pulls;
+    let newLegendaryCount = user.legendary_count;
 
-    const isNew = !existing;
+    for (let i = 0; i < packType.cardCount; i++) {
+      const isGuaranteed = packType.guaranteeRarity && i === packType.cardCount - 1;
+      const result = isGuaranteed
+        ? pullCardWithGuarantee(newPityCount, packType.guaranteeRarity)
+        : pullCard(newPityCount);
 
-    db.prepare(
-      'INSERT INTO inventory (user_id, card_id) VALUES (?, ?)'
-    ).run(user.id, result.card.id);
+      const existing = db.prepare(
+        'SELECT id FROM inventory WHERE user_id = ? AND card_id = ? LIMIT 1'
+      ).get(user.id, result.card.id) as { id: number } | undefined;
 
-    const coinsEarned = isNew ? 0 : DUPLICATE_REWARD;
+      const isNew = !existing;
 
-    if (result.card.rarity === Rarity.Legendary) {
       db.prepare(
-        'UPDATE users SET coins = coins - ? + ?, pity_count = 0, total_pulls = total_pulls + 1, legendary_count = legendary_count + 1 WHERE id = ?'
-      ).run(PACK_COST, coinsEarned, user.id);
-    } else {
-      db.prepare(
-        'UPDATE users SET coins = coins - ? + ?, pity_count = pity_count + 1, total_pulls = total_pulls + 1 WHERE id = ?'
-      ).run(PACK_COST, coinsEarned, user.id);
+        'INSERT INTO inventory (user_id, card_id) VALUES (?, ?)'
+      ).run(user.id, result.card.id);
+
+      const coinsEarned = isNew ? 0 : DUPLICATE_REWARD;
+      totalCoinsEarned += coinsEarned;
+      newTotalPulls++;
+
+      if (result.card.rarity === Rarity.Legendary) {
+        newPityCount = 0;
+        newLegendaryCount++;
+      } else {
+        newPityCount++;
+      }
+
+      results.push({ card: result.card, isNew });
     }
+
+    // Update user coins and stats
+    db.prepare(
+      'UPDATE users SET coins = coins - ? + ?, pity_count = ?, total_pulls = ?, legendary_count = ? WHERE id = ?'
+    ).run(packType.cost, totalCoinsEarned, newPityCount, newTotalPulls, newLegendaryCount, user.id);
 
     const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id) as DbUser | undefined;
 
@@ -129,11 +156,14 @@ router.post('/open', (req, res) => {
 
     db.exec('COMMIT');
 
+    // Track missions
+    incrementMission(user.id, 'open_packs');
+    if (totalCoinsEarned > 0) {
+      incrementMission(user.id, 'earn_coins', totalCoinsEarned);
+    }
+
     res.json({
-      card: result.card,
-      isNew,
-      coinsEarned,
-      pityActive: result.wasPity,
+      cards: results,
       user: {
         id: updated.id,
         name: updated.name,
