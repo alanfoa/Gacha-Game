@@ -105,7 +105,7 @@ export function CardModal({ card, owned, onClose }: Props) {
       >
         <div ref={cardOuterRef} style={{ perspective: '800px', transition: 'transform 0.3s ease-out' }}>
           <div ref={cardInnerRef} style={{ willChange: 'transform', transition: 'transform 0.08s ease-out' }}>
-            <PlaceholderCard rarity={card.rarity} name={owned ? card.name : '???'} />
+            <PlaceholderCard rarity={card.rarity} name={owned ? card.name : '???'} cardId={owned ? card.id : undefined} stats={owned ? card.stats : undefined} />
           </div>
         </div>
 

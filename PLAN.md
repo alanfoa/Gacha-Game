@@ -330,3 +330,161 @@ A medida que se completen los módulos, marcar con [x] para el tilde verde.
 | Express + SQLite | Backend server-side (RNG, persistencia) |
 | Three.js + R3F   | Render 3D para apertura de sobres        |
 | Drei + Postprocessing | Helper 3D, Bloom, efectos de cámara   |
+
+---
+
+## 🚀 PLAN: Expansión Masiva de Gacha Persona
+
+### FASE 1 — Bugs críticos
+
+- [x] **1.1 Pantalla de resultado de batalla**
+  - Mover `BattleResult` al centro como modal con overlay oscuro
+  - Mostrar: VICTORIA/DERROTA, monedas, botón VOLVER AL MENÚ siempre visible
+- [ ] **1.2 Animación de sobres**
+  - Diagnosticar y corregir PackScene3D + transiciones
+- [x] **1.3 Cards consistentes**
+  - Ya implementado: unificación con `size` en vez de `compact`
+
+### FASE 2 — Nuevo sistema de combate: Maná + Cooldowns
+
+- [x] **2.1 Recurso de Maná**
+  - Cada carta tiene `maxMana`: 50 comunes, 70 raros, 100 épicos, 130 legendarios
+  - Empiezan con `mana = maxMana`
+  - Regeneran 20% del maxMana por turno
+- [x] **2.2 Costos por tipo de habilidad**
+
+  | Tipo | Costo Maná | Cooldown |
+  |---|---|---|
+  | Ataque Físico | 0 | 0 |
+  | Magia | 15-25 | 1-2 turnos |
+  | Strike | 30-45 | 2-3 turnos |
+  | Ultimate | 60-80 | 4-5 turnos |
+
+- [x] **2.3 UI de batalla**
+  - Barra de maná debajo de cada carta (similar a HP bar)
+  - Menú de acciones muestra costo de maná + cooldown restante
+  - Habilidades no disponibles se ven deshabilitadas (grises)
+
+### FASE 3 — Catálogo completo con skills oficiales [x]
+
+#### Estructura nueva de `Card`
+```typescript
+interface Card {
+  id: string;
+  name: string;
+  anime: string;
+  rarity: 'COMUN' | 'RARO' | 'EPICO' | 'LEGENDARIO';
+  stats: { attack, defense, magic, luck, speed };
+  hp: number;
+  maxMana: number;
+  element: Element;
+  attackName: string;       attackCost: 0;       attackCooldown: 0;
+  magicName?: string;       magicCost?: number;  magicCooldown?: number;
+  skillName?: string;       skillCost?: number;  skillCooldown?: number;  // Strike
+  ultimateName?: string;    ultimateCost?: number; ultimateCooldown?: number;
+}
+```
+
+#### COMUNES (solo ataque)
+| ID | Personaje | Anime | Ataque |
+|---|---|---|---|
+| c01 | Sakura | Naruto | Impacto de Cerezo |
+| c02 | Iruka | Naruto | Lanzamiento de Shuriken |
+| c03 | Coby | One Piece | Smasher de la Marina |
+| c04 | Usopp | One Piece | Kayaku Hoshi |
+| c05 | Genya | Demon Slayer | Disparo de Escopeta Nichirin |
+| c06 | Murata | Demon Slayer | Estilo de Agua Básica |
+| c07 | Armin | Attack on Titan | Tajo de Presión |
+| c08 | Connie | Attack on Titan | Maniobra Rápida |
+| c09 | Leorio | Hunter x Hunter | Golpe de Maletín |
+| c10 | Kuwabara | Yu Yu Hakusho | Espada de Aura Astral |
+| c11 | Matsuda | Death Note | Disparo de Retención |
+| c12 | Pieck | Attack on Titan | Carga de Suministros |
+| c13 | Mineta | MHA | Esferas Pegajosas Pop Off |
+| c14 | Hide | Tokyo Ghoul | Aliento de Ánimo Físico |
+
+#### RAROS (ataque + magia)
+| ID | Personaje | Anime | Ataque | Magia |
+|---|---|---|---|---|
+| r01 | Nezuko | Demon Slayer | Garra Demoniaca | Exploding Blood |
+| r02 | Zenitsu | Demon Slayer | Tajo del Relámpago | Destello del Relámpago |
+| r03 | Inosuke | Demon Slayer | Colmillo Perforador | Cincel Loco |
+| r04 | Mikasa | AOT | Tajo de Alta Velocidad | Lanza Relámpago |
+| r05 | Gon | HxH | Puñetazo Fuerte | Jajanken: Papel |
+| r06 | Yukari Takeba | Persona 3 | Flecha de Viento | Garu Estelar |
+| r07 | Junpei Iori | Persona 3 | Tajo de Bate | Agi Ígneo |
+| r08 | Yosuke Hanamura | Persona 4 | Doble Daga | Garula Elástico |
+| r09 | Chie Satonaka | Persona 4 | Patada Alta | Bufu de Hielo |
+| r10 | Ryuji Sakamoto | Persona 5 | Golpe de Tubo | Zio Eléctrico |
+| r11 | Ann Takamaki | Persona 5 | Latigazo | Agilao de Fuego |
+| r12 | Misa Amane | Death Note | Devoción de Shinigami | Ojos de Shinigami |
+| r13 | Kana Arima | Oshi no Ko | Pataleta de Actriz | Brillo de Lamer Enchufes |
+| r14 | Mem-cho | Oshi no Ko | Ataque de Streamer | Hype de Redes |
+| r15 | Lucy Heartfilia | Fairy Tail | Patada de Lucy | Invocación de Aquario |
+| r16 | Gray Fullbuster | Fairy Tail | Espada de Hielo | Ice-Make: Cañón |
+| r17 | Uraraka | MHA | Golpe de Escombros | Gravedad Zero |
+| r18 | Iida | MHA | Patada Recipro | Turbo Motor |
+| r19 | Touka Kirishima | Tokyo Ghoul | Zarpazo de Kagune | Cristal de Ukaku |
+
+#### ÉPICOS (ataque + magia + strike)
+| ID | Personaje | Anime | Ataque | Magia | Strike |
+|---|---|---|---|---|---|
+| e01 | Tanjiro | Demon Slayer | Tajo de la Superficie | Vals de Fuego | Dragón del Cambio |
+| e02 | Naruto (Base) | Naruto | Combo de Naruto | Rasengan | Odama Rasengan |
+| e03 | Luffy (Base) | One Piece | Gomu Gomu no Pistol | Red Hawk | Elephant Gun |
+| e04 | Eren Titán | AOT | Golpe de Titán | Endurecimiento | Rugido de Ataque |
+| e05 | Joseph Joestar | JoJo's | Golpe con Hilos | Hamon Overdrive | Elástico de Hamon |
+| e06 | Gojo (Base) | JJK | Golpe Directo | Azul (Ao) | Rojo (Aka) |
+| e07 | Sukuna (Base) | JJK | Desmantelar | Flecha de Fuego | Partir |
+| e08 | Rudeus Greyrat | Mushoku Tensei | Golpe de Bastón | Stone Cannon | Perturbación de Magia |
+| e09 | Itadori | JJK | Puño Divergente | Destello Negro | Impacto de Alma |
+| e10 | Killua | HxH | Garras de Asesino | Palma de Trueno | Godspeed |
+| e11 | Sasuke (Base) | Naruto | Tajo Kusanagi | Chidori | Kirin |
+| e12 | Makoto Yuki | Persona 3 | Corte de Espada | Agidyne | Cadenza de Orpheus |
+| e13 | Yu Narukami | Persona 4 | Tajo de Katana | Ziodyne | Myriad Truths |
+| e14 | Ren Amamiya | Persona 5 | Tiro de Pistola | Eigaon | Balas de Alta |
+| e15 | Light Yagami | Death Note | Estratagema Genial | Sentencia del Cuaderno | Dios del Nuevo Mundo |
+| e16 | L Lawliet | Death Note | Deducción Analítica | Trampa de Captura | Jaque Mate de Justicia |
+| e17 | Aqua Hoshino | Oshi no Ko | Mirada Fría | Ojos de Estrella Oscura | Venganza Calculada |
+| e18 | Ruby Hoshino | Oshi no Ko | Baile Escénico | Carisma de Idol | Renacimiento de Sarina |
+| e19 | Natsu Dragneel | Fairy Tail | Puño de Dragón de Fuego | Rugido del Dragón | Loto Carmesí |
+| e20 | Deku | MHA | Delaware Smash | Detroit Smash | OFA 20% |
+| e21 | Ken Kaneki | Tokyo Ghoul | Azote de Rize | Ciempiés de Kakuja | ¿1000 menos 7? |
+
+#### LEGENDARIOS (ataque + magia + strike + ultimate)
+| ID | Personaje | Ataque | Magia | Strike | Ultimate |
+|---|---|---|---|---|---|
+| l01 | Gojo (Awakened) | Destello Negro Crítico | Azul Máximo | Rojo Invertido | Vacío Inconmensurable |
+| l02 | Sukuna (Rey Maldiciones) | Desmantelar Continuo | Fuga Absoluta | Corte que Divide el Mundo | Reliquia Malévola |
+| l03 | Rudeus Greyrat (Dios Magia) | Armadura Mágica MK-I | Cañón de Piedra Nuclear | Hidro-Bomba Cataclísmica | Cumulonimbus Absoluto |
+| l04 | Naruto (S6C) | Rasen Shuriken de Lava | Rasengan Magnético | Toldo de Bestias | Flecha de Indra Final |
+| l05 | Luffy (Gear 5) | Gomu Gomu no Gigant | Gomu Gomu no Lightning | Bajrang Gun | Amanecer Blanco de la Libertad |
+| l06 | Sasuke (Rinnegan Supremo) | Chidori Kagutsuchi | Amaterasu | Susanoo: Flecha de Indra | Chibaku Tensei Celestial |
+| l07 | Tanjiro (Marca Cazador) | Danza del Dios del Fuego | Sol Poniente | Decimotercera Postura | Tajo de la Cabeza del Dragón |
+| l08 | Eren (Titán Fundador) | Pisotón del Retumbar | Control de Titanes | Endurecimiento Divino | El Retumbar Absoluto |
+| l09 | Joseph (Maestro Supremo) | Clacker Volley Imbuido | Hamon Overdrive Máximo | Red de Hilos Solar | Predicción de Turno |
+| l10 | Itadori (Despertado) | Combo de Destellos Negros | Santuario Efímero | Impacto Punzante de Alma | Corte de Almas Separadas |
+| l11 | Killua (Godspeed) | Torbellino Eléctrico | Descarga Narukami | Velocidad Lumínica | Perforación de Corazón |
+| l12 | Makoto Yuki (Mesías P3) | Tajo del Fin del Mundo | Megidolaon Cósmico | Gran Sello | Armagedón de Tánatos/Orpheus |
+| l13 | Yu Narukami (Izanagi-no-Okami) | Tajo de la Verdad | Ziodyne Absoluto | Espada de Justicia | Myriad Truths Divino |
+| l14 | Ren Amamiya (Satanael P5) | Disparo de Alta Traición | Maeigaon Cósmico | Balas de la Rebelión | Sinful Shell |
+| l15 | Light Yagami (Kira) | Juicio Ejecutivo | Manipulación de Eventos | Sonrisa del Triunfo | Sentencia Final del Death Note |
+| l16 | L Lawliet (Justicia Global) | Análisis Forense | Operación de Captura | Red de Espionaje | Jaque Mate Absoluto |
+| l17 | Aqua Hoshino (Actor Oscuro) | Interpretación de Venganza | Ojos de Doble Filo | Manipulación Mediática | Destrucción Psicológica |
+| l18 | Ruby Hoshino (Idol Nueva Era) | Baile de Escenario Perfecto | Brillo de Estrella | Concierto del Domo | Renacimiento de la Luz de Ai |
+| l19 | Natsu (Dragón Negro) | Espada del Fénix | Rugido del Dios Dragón | Loto Carmesí Explosivo | Puño del Rey Dragón |
+| l20 | Deku (100% Full Cowl) | Texas Smash | Fa Jin + Quinto Látigo | United States of World Smash | OFA 100% Shoot Style |
+| l21 | Ken Kaneki (Dragón) | Azote de Tentáculos | Devoración de Células RC | Ruina de la CCG | El Despertar del Dragón |
+
+### FASE 4 — Migración
+
+- [x] **4.1.** Reset total: se borra la DB, inventario, monedas y progreso
+- [x] **4.2.** Las cartas viejas (26) se reemplazan por el nuevo catálogo (75 cartas)
+- [ ] **4.3.** Se regeneran las imágenes desde la API de Jikan
+
+### FASE 5 — Animaciones
+
+- [ ] **5.1. Ataque físico** — impacto/zoom simple en la carta objetivo
+- [ ] **5.2. Magia** — partículas del color del elemento
+- [ ] **5.3. Strike** — animación más elaborada + brillo + screen shake leve
+- [ ] **5.4. Ultimate** — cámara lenta, filtro de color, pantalla vibra, partículas masivas

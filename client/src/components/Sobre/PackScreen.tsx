@@ -24,6 +24,8 @@ export function PackScreen() {
 
   const [cardRarity, setCardRarity] = useState<string | null>(null);
   const [cardName, setCardName] = useState<string | null>(null);
+  const [cardId, setCardId] = useState<string | null>(null);
+  const [cardStats, setCardStats] = useState<{ attack: number; defense: number; magic: number; luck: number; speed: number } | null>(null);
   const [skip, setSkip] = useState(false);
 
   const isOpeningRef = useRef(false);
@@ -71,6 +73,8 @@ export function PackScreen() {
     setHypeRarity(null);
     setCardRarity(null);
     setCardName(null);
+    setCardId(null);
+    setCardStats(null);
     setSkip(false);
     setSceneKey((k) => k + 1);
   };
@@ -102,6 +106,8 @@ export function PackScreen() {
       if (!result.isNew) play('duplicate');
       setCardRarity(result.card.rarity);
       setCardName(result.card.name);
+      setCardId(result.card.id);
+      setCardStats(result.card.stats);
       setHypeRarity(null);
       isOpeningRef.current = false;
       setIsOpening(false);
@@ -113,6 +119,8 @@ export function PackScreen() {
     if (!result.isNew) play('duplicate');
     setCardRarity(result.card.rarity);
     setCardName(result.card.name);
+    setCardId(result.card.id);
+    setCardStats(result.card.stats);
     setTimeout(() => setHypeRarity(null), 800);
 
     isOpeningRef.current = false;
@@ -146,6 +154,8 @@ export function PackScreen() {
         key={sceneKey}
         cardRarity={cardRarity}
         cardName={cardName}
+        cardId={cardId}
+        cardStats={cardStats}
         skip={skip}
       />
 
@@ -327,7 +337,7 @@ export function PackScreen() {
 
           {showCard && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', pointerEvents: 'auto', zIndex: 20, position: 'relative' }}>
-              <PlaceholderCard rarity={card.rarity} name={card.name} />
+              <PlaceholderCard rarity={card.rarity} name={card.name} cardId={card.id} stats={cardStats ?? undefined} />
               {!lastResult?.isNew && (
                 <p style={{ color: '#facc15', fontWeight: 700, fontSize: '1.125rem', textShadow: '0 0 8px rgba(250,204,21,0.4)' }}>
                   ⚡ DUPLICADO +25 monedas

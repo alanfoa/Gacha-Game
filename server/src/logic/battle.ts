@@ -32,11 +32,15 @@ export interface Skill {
   name: string;
   type: ActionType;
   power: number;
+  cost: number;
+  cooldown: number;
+  currentCooldown: number;
   description: string;
   effect?: SkillEffect;
 }
 
 export interface BattleCard {
+  uid: string;
   cardId: string;
   name: string;
   rarity: Rarity;
@@ -44,6 +48,8 @@ export interface BattleCard {
   stats: { attack: number; defense: number; magic: number; luck: number; speed: number };
   currentHp: number;
   maxHp: number;
+  currentMana: number;
+  maxMana: number;
   isDefending: boolean;
   skills: Skill[];
   statusEffects: StatusEffect[];
@@ -59,10 +65,13 @@ export interface BattleAction {
 
 export interface BattleLogAction {
   cardId: string;
+  cardUid: string;
   targetId: string;
+  targetUid: string;
   damage: number;
   critical: boolean;
   action: ActionType;
+  skillId?: string;
   message: string;
 }
 
@@ -75,80 +84,64 @@ export interface BattleResult {
   coinsEarned: number;
 }
 
-function getStrikeEffect(cardId: string): SkillEffect | undefined {
-  switch (cardId) {
-    case 'joseph_e': return { type: 'IGNORE_DEF', value: 20 };
-    case 'orsted_e': return { type: 'MAG_DOWN', value: 30, duration: 1 };
-    case 'sukuna_e': return { type: 'BLEED', value: 15, duration: 2 };
-    case 'madara_e': return { type: 'CRIT_BONUS', value: 15 };
-    case 'kaido_e':  return { type: 'STUN', chance: 20 };
-    case 'giorno_l': return { type: 'HEAL_ALLY', value: 40 };
-    case 'rudeus_god_l': return { type: 'DEF_DOWN', value: 40, duration: 2 };
-    case 'gojo_awak_l': return { type: 'SPD_DOWN', value: 30, duration: 2 };
-    default: return undefined;
-  }
-}
-
-function getUltimateEffect(cardId: string): SkillEffect | undefined {
-  switch (cardId) {
-    case 'giorno_l':    return { type: 'SPD_DOWN', value: 100, duration: 1 };
-    case 'rudeus_god_l': return { type: 'FREEZE' };
-    case 'gojo_awak_l':  return { type: 'IGNORE_ALL_DEF' };
-    default: return undefined;
-  }
-}
-
-function getStrikeName(cardId: string): string {
-  switch (cardId) {
-    case 'joseph_e': return 'Hamon Overdrive';
-    case 'orsted_e': return 'Perturbación de Magia';
-    case 'sukuna_e': return 'Dismantle';
-    case 'madara_e': return 'Katon: Gōka Mekkyaku';
-    case 'kaido_e':  return 'Raimei Hakke';
-    case 'giorno_l': return 'Gold Experience';
-    case 'rudeus_god_l': return 'Stone Cannon Máximo';
-    case 'gojo_awak_l': return 'Rojo (Aka)';
-    default: return `${cards.find((c) => c.id === cardId)?.element ?? ''} Strike`;
-  }
-}
-
-function getUltimateName(cardId: string): string {
-  switch (cardId) {
-    case 'giorno_l':    return 'Gold Experience Requiem';
-    case 'rudeus_god_l': return 'Cumulonimbus Absoluto';
-    case 'gojo_awak_l':  return 'Púrpura (Murasaki)';
-    default: return 'Ultimate';
-  }
+function getSkillEffect(cardId: string, skillType: 'strike' | 'ultimate'): SkillEffect | undefined {
+  const effects: Record<string, { strike?: SkillEffect; ultimate?: SkillEffect }> = {
+    'e05': { strike: { type: 'IGNORE_DEF', value: 20 } },
+    'e08': { strike: { type: 'MAG_DOWN', value: 30, duration: 1 } },
+    'e07': { strike: { type: 'BLEED', value: 15, duration: 2 } },
+    'e15': { strike: { type: 'IGNORE_DEF', value: 30 } },
+    'e21': { strike: { type: 'STUN', chance: 15 } },
+    'e19': { strike: { type: 'DEF_DOWN', value: 20, duration: 2 } },
+    'e17': { strike: { type: 'IGNORE_DEF', value: 50 } },
+    'e18': { strike: { type: 'HEAL_ALLY', value: 30 } },
+    'l01': { ultimate: { type: 'IGNORE_ALL_DEF' } },
+    'l02': { strike: { type: 'BLEED', value: 25, duration: 2 }, ultimate: { type: 'IGNORE_ALL_DEF' } },
+    'l03': { ultimate: { type: 'FREEZE' } },
+    'l05': { strike: { type: 'STUN', chance: 30 } },
+    'l07': { strike: { type: 'IGNORE_DEF', value: 40 }, ultimate: { type: 'IGNORE_ALL_DEF' } },
+    'l08': { ultimate: { type: 'STUN', chance: 50 } },
+    'l09': { ultimate: { type: 'SPD_DOWN', value: 50, duration: 1 } },
+    'l11': { strike: { type: 'SPD_DOWN', value: 40, duration: 2 } },
+    'l12': { ultimate: { type: 'STUN', chance: 100 } },
+    'l13': { strike: { type: 'HEAL_ALLY', value: 35 } },
+    'l15': { ultimate: { type: 'SPD_DOWN', value: 100, duration: 1 } },
+    'l16': { ultimate: { type: 'STUN', chance: 60 } },
+    'l18': { ultimate: { type: 'HEAL_ALLY', value: 100 } },
+    'l19': { strike: { type: 'DEF_DOWN', value: 30, duration: 2 } },
+    'l20': { strike: { type: 'IGNORE_DEF', value: 50 }, ultimate: { type: 'IGNORE_ALL_DEF' } },
+    'l21': { ultimate: { type: 'STUN', chance: 80 } },
+  };
+  const entry = effects[cardId];
+  if (!entry) return undefined;
+  return skillType === 'strike' ? entry.strike : entry.ultimate;
 }
 
 function generateSkills(card: Card): Skill[] {
-  const rarityLevel = RARITY_ORDER[card.rarity];
   const skills: Skill[] = [
-    { id: `atk_${card.id}`, name: card.attackName, type: 'ATTACK', power: 80, description: 'Ataque físico' },
+    { id: `atk_${card.id}`, name: card.attackName, type: 'ATTACK', power: 80, cost: card.attackCost, cooldown: card.attackCooldown, currentCooldown: 0, description: 'Ataque físico' },
   ];
 
-  if (rarityLevel >= 1 && card.magicName) {
+  if (card.magicName) {
     skills.push({
       id: `mag_${card.id}`, name: card.magicName, type: 'MAGIC', power: 75,
+      cost: card.magicCost ?? 20, cooldown: card.magicCooldown ?? 1, currentCooldown: 0,
       description: 'Ataque mágico',
     });
   }
-  if (rarityLevel >= 2) {
-    const strikeEffect = getStrikeEffect(card.id);
-    const strikeName = getStrikeName(card.id);
+  if (card.skillName) {
+    const strikeEffect = getSkillEffect(card.id, 'strike');
     skills.push({
-      id: `skill_${card.id}`, name: strikeName, type: 'SKILL', power: 120,
-      description: `Golpe elemental ${card.element}`,
-      effect: strikeEffect,
+      id: `skill_${card.id}`, name: card.skillName, type: 'SKILL', power: 120,
+      cost: card.skillCost ?? 35, cooldown: card.skillCooldown ?? 2, currentCooldown: 0,
+      description: `Golpe ${card.element}`, effect: strikeEffect,
     });
   }
-  if (rarityLevel >= 3) {
-    const ultEffect = getUltimateEffect(card.id);
-    const ultName = getUltimateName(card.id);
+  if (card.ultimateName) {
+    const ultEffect = getSkillEffect(card.id, 'ultimate');
     skills.push({
-      id: `ult_${card.id}`, name: ultName, type: 'SKILL', power: 180,
-      description: 'Poder definitivo',
-      effect: ultEffect,
+      id: `ult_${card.id}`, name: card.ultimateName, type: 'SKILL', power: 180,
+      cost: card.ultimateCost ?? 65, cooldown: card.ultimateCooldown ?? 4, currentCooldown: 0,
+      description: 'Poder definitivo', effect: ultEffect,
     });
   }
 
@@ -232,11 +225,7 @@ function applySkillEffect(
         value: bleedDmg,
         sourceName: attacker.name,
       });
-      logs.push({
-        cardId: attacker.cardId, targetId: target.cardId,
-        damage: 0, critical: false, action: 'SKILL',
-        message: `${target.name} sangra (${effect.duration ?? 2} turnos)`,
-      });
+      logs.push(logEntry(attacker, target, 'SKILL', 0, false, `${target.name} sangra (${effect.duration ?? 2} turnos)`));
       break;
     }
     case 'DEF_DOWN': {
@@ -246,11 +235,7 @@ function applySkillEffect(
         value: effect.value ?? 40,
         sourceName: attacker.name,
       });
-      logs.push({
-        cardId: attacker.cardId, targetId: target.cardId,
-        damage: 0, critical: false, action: 'SKILL',
-        message: `DEF de ${target.name} baja ${effect.value ?? 40}% (${effect.duration ?? 2} turnos)`,
-      });
+      logs.push(logEntry(attacker, target, 'SKILL', 0, false, `DEF de ${target.name} baja ${effect.value ?? 40}% (${effect.duration ?? 2} turnos)`));
       break;
     }
     case 'SPD_DOWN': {
@@ -261,11 +246,7 @@ function applySkillEffect(
         value: spdReduce,
         sourceName: attacker.name,
       });
-      logs.push({
-        cardId: attacker.cardId, targetId: target.cardId,
-        damage: 0, critical: false, action: 'SKILL',
-        message: `VEL de ${target.name} baja ${spdReduce}% (${effect.duration ?? 2} turnos)`,
-      });
+      logs.push(logEntry(attacker, target, 'SKILL', 0, false, `VEL de ${target.name} baja ${spdReduce}% (${effect.duration ?? 2} turnos)`));
       break;
     }
     case 'MAG_DOWN': {
@@ -275,11 +256,7 @@ function applySkillEffect(
         value: effect.value ?? 30,
         sourceName: attacker.name,
       });
-      logs.push({
-        cardId: attacker.cardId, targetId: target.cardId,
-        damage: 0, critical: false, action: 'SKILL',
-        message: `MAG de ${target.name} baja ${effect.value ?? 30}% (${effect.duration ?? 2} turnos)`,
-      });
+      logs.push(logEntry(attacker, target, 'SKILL', 0, false, `MAG de ${target.name} baja ${effect.value ?? 30}% (${effect.duration ?? 2} turnos)`));
       break;
     }
     case 'STUN': {
@@ -290,20 +267,12 @@ function applySkillEffect(
         sourceName: attacker.name,
       });
       target.skipNextTurn = true;
-      logs.push({
-        cardId: attacker.cardId, targetId: target.cardId,
-        damage: 0, critical: false, action: 'SKILL',
-        message: `${target.name} aturdido!`,
-      });
+      logs.push(logEntry(attacker, target, 'SKILL', 0, false, `${target.name} aturdido!`));
       break;
     }
     case 'FREEZE': {
       target.skipNextTurn = true;
-      logs.push({
-        cardId: attacker.cardId, targetId: target.cardId,
-        damage: 0, critical: false, action: 'SKILL',
-        message: `${target.name} congelado!`,
-      });
+      logs.push(logEntry(attacker, target, 'SKILL', 0, false, `${target.name} congelado!`));
       break;
     }
     case 'HEAL_ALLY': {
@@ -317,9 +286,32 @@ function applySkillEffect(
   }
 }
 
+function logEntry(
+  card: BattleCard,
+  target: BattleCard | null,
+  action: ActionType,
+  damage: number,
+  critical: boolean,
+  message: string,
+  skillId?: string,
+): BattleLogAction {
+  return {
+    cardId: card.cardId,
+    cardUid: card.uid,
+    targetId: target?.cardId ?? card.cardId,
+    targetUid: target?.uid ?? card.uid,
+    damage,
+    critical,
+    action,
+    skillId,
+    message,
+  };
+}
+
 export function createBattleCard(card: Card): BattleCard {
   const skills = generateSkills(card);
   return {
+    uid: `${card.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     cardId: card.id,
     name: card.name,
     rarity: card.rarity,
@@ -327,6 +319,8 @@ export function createBattleCard(card: Card): BattleCard {
     stats: { ...card.stats },
     currentHp: card.hp,
     maxHp: card.hp,
+    currentMana: card.maxMana,
+    maxMana: card.maxMana,
     isDefending: false,
     skills,
     statusEffects: [],
@@ -373,20 +367,23 @@ export function processTurn(
 ): BattleResult {
   const logs: BattleLogAction[] = [];
 
-  // Step 1: Process status effects (bleed, expire)
+  // Step 1: Regen mana + reduce cooldowns + process status effects
   for (const card of [...playerCards, ...enemyCards]) {
     if (card.currentHp <= 0) continue;
 
+    // Regen 20% maxMana per turn
+    card.currentMana = Math.min(card.maxMana, card.currentMana + Math.round(card.maxMana * 0.2));
+
+    // Reduce cooldowns
+    card.skills.forEach((s) => { s.currentCooldown = Math.max(0, s.currentCooldown - 1); });
+
+    // Status effects
     const bleed = card.statusEffects.find((e) => e.type === 'BLEED');
     if (bleed) {
       const bleedDmg = Math.max(1, Math.round(bleed.value));
       card.currentHp -= bleedDmg;
       clampHp(card);
-      logs.push({
-        cardId: card.cardId, targetId: card.cardId,
-        damage: bleedDmg, critical: false, action: 'SKILL',
-        message: `${card.name} recibe ${bleedDmg} de sangrado`,
-      });
+      logs.push(logEntry(card, card, 'SKILL', bleedDmg, false, `${card.name} recibe ${bleedDmg} de sangrado`));
     }
 
     card.statusEffects = card.statusEffects
@@ -401,7 +398,7 @@ export function processTurn(
   // Step 3: Generate enemy actions
   const enemyActions = generateEnemyActions(enemyCards, playerCards);
 
-  // Step 4: Build combined pool of all actions
+  // Step 4: Build combined pool of all actions (check mana + cooldown)
   interface PendingAction {
     card: BattleCard;
     actionType: ActionType;
@@ -417,11 +414,7 @@ export function processTurn(
 
     if (pa.action === 'DEFEND') {
       card.isDefending = true;
-      logs.push({
-        cardId: card.cardId, targetId: card.cardId,
-        damage: 0, critical: false, action: 'DEFEND',
-        message: `${card.name} se defiende`,
-      });
+      logs.push(logEntry(card, card, 'DEFEND', 0, false, `${card.name} se defiende`));
       continue;
     }
 
@@ -429,6 +422,29 @@ export function processTurn(
       ? [...enemyCards, ...playerCards].find((c) => c.cardId === pa.targetId)
       : undefined;
     if (!target || target.currentHp <= 0) continue;
+
+    const skill = pa.skillId
+      ? card.skills.find((s) => s.id === pa.skillId)
+      : card.skills[0];
+    if (!skill) continue;
+
+    // Check mana
+    if (card.currentMana < skill.cost) {
+      logs.push(logEntry(card, card, 'ATTACK', 0, false, `${card.name} no tiene maná para ${skill.name} (${card.currentMana}/${skill.cost}) — ataca básico`));
+      pool.push({ card, actionType: 'ATTACK', target, skillId: card.skills[0].id });
+      continue;
+    }
+    // Check cooldown
+    if (skill.currentCooldown > 0) {
+      logs.push(logEntry(card, card, 'ATTACK', 0, false, `${skill.name} de ${card.name} en cooldown (${skill.currentCooldown}t) — ataca básico`));
+      pool.push({ card, actionType: 'ATTACK', target, skillId: card.skills[0].id });
+      continue;
+    }
+
+    // Deduct mana
+    card.currentMana -= skill.cost;
+    // Set cooldown
+    skill.currentCooldown = skill.cooldown;
 
     pool.push({ card, actionType: pa.action, target, skillId: pa.skillId });
   }
@@ -439,11 +455,7 @@ export function processTurn(
 
     if (ea.action === 'DEFEND') {
       card.isDefending = true;
-      logs.push({
-        cardId: card.cardId, targetId: card.cardId,
-        damage: 0, critical: false, action: 'DEFEND',
-        message: `${card.name} se defiende`,
-      });
+      logs.push(logEntry(card, card, 'DEFEND', 0, false, `${card.name} se defiende`));
       continue;
     }
 
@@ -458,11 +470,7 @@ export function processTurn(
     if (card.skipNextTurn) {
       card.skipNextTurn = false;
       if (card.currentHp > 0) {
-        logs.push({
-          cardId: card.cardId, targetId: card.cardId,
-          damage: 0, critical: false, action: 'DEFEND',
-          message: `${card.name} no puede moverse`,
-        });
+        logs.push(logEntry(card, card, 'DEFEND', 0, false, `${card.name} no puede moverse`));
       }
     }
   }
@@ -498,11 +506,7 @@ export function processTurn(
         const { damage } = applyDamageToCard(pending.target, skill, elementMult, pending.target.isDefending, pending.card.stats.luck, atkStat);
         const healAmt = Math.round(damage * 0.4);
         healTarget.currentHp = Math.min(healTarget.currentHp + healAmt, healTarget.maxHp);
-        logs.push({
-          cardId: pending.card.cardId, targetId: pending.target.cardId,
-          damage, critical: false, action: 'SKILL',
-          message: `${pending.card.name} usa ${skill.name} → ${pending.target.name}: -${damage}, ${healTarget.name} recupera ${healAmt}`,
-        });
+        logs.push(logEntry(pending.card, pending.target, 'SKILL', damage, false, `${pending.card.name} usa ${skill.name} → ${pending.target.name}: -${damage}, ${healTarget.name} recupera ${healAmt}`, skill.id));
         applySkillEffect(pending.card, pending.target, skill, logs);
       }
       continue;
@@ -523,11 +527,7 @@ export function processTurn(
       pending.target.stats.defense = reducedDef;
       const { damage, critical } = applyDamageToCard(pending.target, skill, elementMult, pending.target.isDefending, effectiveLuck, atkStat);
       pending.target.stats.defense = originalDef;
-      logs.push({
-        cardId: pending.card.cardId, targetId: pending.target.cardId,
-        damage, critical, action: skill.type,
-        message: `${pending.card.name} usa ${skill.name} → ${pending.target.name}: -${damage}${critical ? ' ¡CRÍTICO!' : ''}`,
-      });
+      logs.push(logEntry(pending.card, pending.target, skill.type, damage, critical, `${pending.card.name} usa ${skill.name} → ${pending.target.name}: -${damage}${critical ? ' ¡CRÍTICO!' : ''}`, skill.id));
       applySkillEffect(pending.card, pending.target, skill, logs);
       continue;
     }
@@ -540,11 +540,7 @@ export function processTurn(
       pending.target.stats.defense = 0;
       const { damage, critical } = applyDamageToCard(pending.target, skill, elementMult, false, effectiveLuck, atkStat);
       pending.target.stats.defense = originalDef;
-      logs.push({
-        cardId: pending.card.cardId, targetId: pending.target.cardId,
-        damage, critical, action: skill.type,
-        message: `${pending.card.name} usa ${skill.name} → ${pending.target.name}: -${damage}${critical ? ' ¡CRÍTICO!' : ''}`,
-      });
+      logs.push(logEntry(pending.card, pending.target, skill.type, damage, critical, `${pending.card.name} usa ${skill.name} → ${pending.target.name}: -${damage}${critical ? ' ¡CRÍTICO!' : ''}`, skill.id));
       applySkillEffect(pending.card, pending.target, skill, logs);
       continue;
     }
@@ -553,11 +549,7 @@ export function processTurn(
     const elementMult = skill.type === 'SKILL' ? getElementMultiplier(pending.card.element, pending.target.element) : 1;
     const atkStat = skill.type === 'MAGIC' ? pending.card.stats.magic : pending.card.stats.attack;
     const { damage, critical } = applyDamageToCard(pending.target, skill, elementMult, pending.target.isDefending, effectiveLuck, atkStat);
-    logs.push({
-      cardId: pending.card.cardId, targetId: pending.target.cardId,
-      damage, critical, action: skill.type,
-      message: `${pending.card.name} usa ${skill.name} → ${pending.target.name}: -${damage}${critical ? ' ¡CRÍTICO!' : ''}`,
-    });
+    logs.push(logEntry(pending.card, pending.target, skill.type, damage, critical, `${pending.card.name} usa ${skill.name} → ${pending.target.name}: -${damage}${critical ? ' ¡CRÍTICO!' : ''}`, skill.id));
     applySkillEffect(pending.card, pending.target, skill, logs);
   }
 

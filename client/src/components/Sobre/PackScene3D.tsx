@@ -1,12 +1,15 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import gsap from 'gsap';
-import { getCardCanvas, RARITY_STYLES } from './cardTexture';
+import { getCardCanvas, RARITY_STYLES, type CardCanvasStats } from './cardTexture';
+import { loadCardImage } from '../../utils/cardImage';
 
 interface PackScene3DProps {
   cardRarity: string | null;
   cardName: string | null;
+  cardId: string | null;
+  cardStats: CardCanvasStats | null;
   skip: boolean;
 }
 
@@ -73,17 +76,41 @@ function Envelope3D({ open }: { open: boolean }) {
   );
 }
 
-function RevealCard3D({ rarity, name, visible }: { rarity: string; name: string; visible: boolean }) {
+function RevealCard3D({ rarity, name, cardId, stats, visible }: { rarity: string; name: string; cardId?: string | null; stats?: CardCanvasStats | null; visible: boolean }) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const textureRef = useRef<THREE.CanvasTexture | null>(null);
   const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
 
+  const draw = useCallback(() => {
+    const src = getCardCanvas(rarity, name, 280, cardId ?? undefined, stats ?? undefined);
+    if (!canvasRef.current || canvasRef.current.width !== src.width || canvasRef.current.height !== src.height) {
+      canvasRef.current = document.createElement('canvas');
+      canvasRef.current.width = src.width;
+      canvasRef.current.height = src.height;
+    }
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, src.width, src.height);
+    ctx.drawImage(src, 0, 0);
+
+    if (!textureRef.current) {
+      textureRef.current = new THREE.CanvasTexture(canvasRef.current);
+      textureRef.current.needsUpdate = true;
+      setTexture(textureRef.current);
+    } else {
+      textureRef.current.needsUpdate = true;
+    }
+  }, [rarity, name, cardId, stats]);
+
   useEffect(() => {
-    const canvas = getCardCanvas(rarity, name);
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.needsUpdate = true;
-    setTexture(tex);
-    return () => { tex.dispose(); };
-  }, [rarity, name]);
+    draw();
+    if (cardId) loadCardImage(cardId).then(draw);
+    return () => {
+      if (textureRef.current) { textureRef.current.dispose(); textureRef.current = null; }
+      setTexture(null);
+    };
+  }, [draw, cardId, stats]);
 
   useEffect(() => {
     if (!meshRef.current || !visible) return;
@@ -230,7 +257,7 @@ function CameraShake({ intensity }: { intensity: number }) {
   return null;
 }
 
-function SceneContent({ cardRarity, cardName, skip }: PackScene3DProps) {
+function SceneContent({ cardRarity, cardName, cardId, cardStats, skip }: PackScene3DProps) {
   const [phase, setPhase] = useState<'idle' | 'opening' | 'revealed'>('idle');
   const [particleRarity, setParticleRarity] = useState<string | null>(null);
   const [shakeIntensity, setShakeIntensity] = useState(0);
@@ -291,7 +318,7 @@ function SceneContent({ cardRarity, cardName, skip }: PackScene3DProps) {
       <spotLight position={[0, 3, 4]} angle={0.3} penumbra={0.5} intensity={1.2} color="#ffffff" />
       <Envelope3D open={phase !== 'idle'} />
       {cardRarity && cardName && (
-        <RevealCard3D rarity={cardRarity} name={cardName} visible={phase === 'revealed'} />
+        <RevealCard3D rarity={cardRarity} name={cardName} cardId={cardId} stats={cardStats} visible={phase === 'revealed'} />
       )}
       <ParticleBurst rarity={particleRarity} />
       <CameraShake intensity={shakeIntensity} />

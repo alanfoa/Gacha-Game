@@ -73,13 +73,15 @@ router.post('/battle/start', (req, res) => {
     res.json({
       battleId: id,
       playerCards: playerCards.map((c) => ({
-        cardId: c.cardId, name: c.name, rarity: c.rarity, element: c.element,
+        uid: c.uid, cardId: c.cardId, name: c.name, rarity: c.rarity, element: c.element,
         stats: c.stats, currentHp: c.currentHp, maxHp: c.maxHp,
+        currentMana: c.currentMana, maxMana: c.maxMana,
         skills: c.skills, statusEffects: c.statusEffects, skipNextTurn: c.skipNextTurn,
       })),
       enemyCards: enemyCards.map((c) => ({
-        cardId: c.cardId, name: c.name, rarity: c.rarity, element: c.element,
+        uid: c.uid, cardId: c.cardId, name: c.name, rarity: c.rarity, element: c.element,
         stats: c.stats, currentHp: c.currentHp, maxHp: c.maxHp,
+        currentMana: c.currentMana, maxMana: c.maxMana,
         skills: c.skills, statusEffects: c.statusEffects, skipNextTurn: c.skipNextTurn,
       })),
     });
@@ -128,13 +130,15 @@ router.post('/battle/action', (req, res) => {
       turn: result.turn,
       actions: result.actions,
       playerCards: result.playerCards.map((c) => ({
-        cardId: c.cardId, name: c.name, rarity: c.rarity, element: c.element,
+        uid: c.uid, cardId: c.cardId, name: c.name, rarity: c.rarity, element: c.element,
         stats: c.stats, currentHp: c.currentHp, maxHp: c.maxHp,
+        currentMana: c.currentMana, maxMana: c.maxMana,
         skills: c.skills, statusEffects: c.statusEffects, skipNextTurn: c.skipNextTurn,
       })),
       enemyCards: result.enemyCards.map((c) => ({
-        cardId: c.cardId, name: c.name, rarity: c.rarity, element: c.element,
+        uid: c.uid, cardId: c.cardId, name: c.name, rarity: c.rarity, element: c.element,
         stats: c.stats, currentHp: c.currentHp, maxHp: c.maxHp,
+        currentMana: c.currentMana, maxMana: c.maxMana,
         skills: c.skills, statusEffects: c.statusEffects, skipNextTurn: c.skipNextTurn,
       })),
       winner: result.winner,

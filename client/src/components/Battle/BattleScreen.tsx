@@ -6,6 +6,7 @@ import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
 import { BGM } from '../../audio/sounds';
 import { getCardCanvas } from '../Sobre/cardTexture';
+import { loadCardImage } from '../../utils/cardImage';
 
 type Phase = 'player_turn' | 'resolving' | 'result';
 
@@ -36,6 +37,7 @@ export function BattleScreen() {
   const [skipAnim, setSkipAnim] = useState(false);
   const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
   const [flashOpacity, setFlashOpacity] = useState(0);
+  const [flashColor, setFlashColor] = useState('rgba(251,191,36,0.4)');
 
   const battleContainerRef = useRef<HTMLDivElement>(null);
   const mountedAt = useRef(Date.now());
@@ -61,10 +63,10 @@ export function BattleScreen() {
   }, [playerBattleCards, enemyBattleCards, battleTurn, phase, startBattleBGM]);
 
   const currentCard = actionablePlayerCards[currentCardIdx];
-  const activeCardId = phase === 'player_turn'
-    ? currentCard?.cardId
+  const activeCardSpec = phase === 'player_turn'
+    ? { type: 'uid' as const, uid: currentCard?.uid ?? currentCard?.cardId }
     : phase === 'resolving' && currentLogIdx >= 0 && currentLogIdx < battleLog.length
-      ? battleLog[currentLogIdx].cardId
+      ? { type: 'uid' as const, uid: battleLog[currentLogIdx].cardUid ?? battleLog[currentLogIdx].cardId }
       : null;
 
   // Auto-submit if no cards can act (all frozen/stunned)
@@ -99,8 +101,13 @@ export function BattleScreen() {
   }, [currentCard]);
 
   const skillOptions = useMemo(() => {
-    return [...currentSkills.map((s) => ({ label: s.name, value: s.id })), { label: '← VOLVER', value: '__back__' }];
-  }, [currentSkills]);
+    return [...currentSkills.map((s) => {
+      const canUse = currentCard.currentMana >= s.cost && s.currentCooldown === 0;
+      const cdLabel = s.currentCooldown > 0 ? ` (CD: ${s.currentCooldown}t)` : '';
+      const manaLabel = s.cost > 0 ? ` ${s.cost}PM` : '';
+      return { label: `${s.name}${manaLabel}${cdLabel}`, value: s.id, disabled: !canUse };
+    }), { label: '← VOLVER', value: '__back__' }];
+  }, [currentSkills, currentCard]);
 
   const actionSublabels = useMemo(() => {
     if (!currentCard) return [];
@@ -109,7 +116,7 @@ export function BattleScreen() {
     result.push(atk ? `Pot: ${atk.power}` : '');
     if (currentCard.skills.some((s) => s.type === 'MAGIC')) {
       const mag = currentCard.skills.find((s) => s.type === 'MAGIC');
-      result.push(mag ? `Pot: ${mag.power}` : '');
+      result.push(mag ? `${mag.cost}PM Pot: ${mag.power}` : '');
     }
     if (currentCard.skills.some((s) => s.type === 'SKILL')) {
       result.push('');
@@ -198,24 +205,37 @@ export function BattleScreen() {
 
     if (!selectedAction) {
       // Action / Skill menu (inline)
-      const items = showSkillSubmenu ? currentSkills : actionOptions;
+      const items = showSkillSubmenu ? skillOptions : actionOptions;
       if (action === 'NAV_UP' || action === 'NAV_LEFT') {
-        setActionMenuFocus((f) => Math.max(0, f - 1));
+        setActionMenuFocus((f) => {
+          let newF = f - 1;
+          while (newF >= 0 && (items as any)[newF]?.disabled) newF--;
+          return Math.max(0, newF);
+        });
         play('nav');
       }
       if (action === 'NAV_DOWN' || action === 'NAV_RIGHT') {
-        setActionMenuFocus((f) => Math.min(items.length - 1, f + 1));
+        setActionMenuFocus((f) => {
+          let newF = f + 1;
+          while (newF < items.length && (items as any)[newF]?.disabled) newF++;
+          return Math.min(items.length - 1, newF);
+        });
         play('nav');
       }
       if (action === 'CONFIRM') {
         if (showSkillSubmenu) {
-          const skill = currentSkills[actionMenuFocus];
-          if (skill) {
-            setSelectedSkill(skill.id);
-            setSelectedAction('SKILL');
+          const skillOpt = skillOptions[actionMenuFocus] as { label: string; value: string; disabled?: boolean } | undefined;
+          if (!skillOpt || skillOpt.disabled) return;
+          if (skillOpt.value === '__back__') {
             setShowSkillSubmenu(false);
-            play('confirm');
+            setActionMenuFocus(0);
+            play('nav');
+            return;
           }
+          setSelectedSkill(skillOpt.value);
+          setSelectedAction('SKILL');
+          setShowSkillSubmenu(false);
+          play('confirm');
         } else {
           const chosen = actionOptions[actionMenuFocus];
           if (!chosen) return;
@@ -369,51 +389,113 @@ export function BattleScreen() {
       play('attackHit');
     }
 
-    // Shake the target card on damage
-    if (entry.damage > 0) {
-      const targetCardEl = document.getElementById(`battle-card-${entry.targetId}`);
-      if (targetCardEl) {
-        try {
+    const targetCardEl = entry.damage > 0 ? document.getElementById(`battle-card-${entry.targetId}`) : null;
+    const isUltimate = entry.skillId?.startsWith('ult_');
+    const isStrike = entry.skillId?.startsWith('skill_');
+    const isMagic = entry.action === 'MAGIC';
+    const isPhysical = entry.action === 'ATTACK';
+
+    // --- Enhanced animations per skill type ---
+    if (targetCardEl && entry.damage > 0) {
+      try {
+        if (isUltimate) {
+          // Ultimate: massive shake + zoom pulse
+          gsap.to(targetCardEl, {
+            scale: 1.25, duration: 0.1, yoyo: true, repeat: 1,
+            ease: 'power1.inOut',
+          });
+          gsap.to(targetCardEl, {
+            x: 'random(-12, 12)', y: 'random(-8, 8)',
+            duration: 0.06, repeat: 8, yoyo: true, ease: 'none',
+            onComplete: () => gsap.set(targetCardEl, { x: 0, y: 0, scale: 1 }),
+          });
+        } else if (isStrike) {
+          // Strike: medium shake + scale bob
+          gsap.to(targetCardEl, {
+            scale: 1.1, duration: 0.08, yoyo: true, repeat: 1,
+            ease: 'power1.inOut',
+          });
+          gsap.to(targetCardEl, {
+            x: 'random(-6, 6)', y: 'random(-4, 4)',
+            duration: 0.05, repeat: 5, yoyo: true, ease: 'none',
+            onComplete: () => gsap.set(targetCardEl, { x: 0, y: 0, scale: 1 }),
+          });
+        } else if (isMagic) {
+          // Magic: float upward + glow
+          gsap.to(targetCardEl, {
+            y: -8, duration: 0.2, ease: 'power1.out',
+            yoyo: true, repeat: 1,
+            onComplete: () => gsap.set(targetCardEl, { y: 0 }),
+          });
+        } else {
+          // Physical: quick shake
           gsap.fromTo(targetCardEl,
             { x: 0 },
             {
-              x: 'random(-4, 4)',
-              y: 'random(-3, 3)',
-              duration: 0.05,
-              repeat: 4,
-              yoyo: true,
-              ease: 'power1.inOut',
+              x: 'random(-4, 4)', y: 'random(-3, 3)',
+              duration: 0.05, repeat: 4, yoyo: true, ease: 'power1.inOut',
               onComplete: () => gsap.set(targetCardEl, { x: 0, y: 0 }),
             }
           );
-        } catch { /* GSAP no disponible */ }
-      }
+        }
+      } catch { /* GSAP no disponible */ }
     }
 
-    // Screen shake + golden flash on critical
-    if (entry.critical && battleContainerRef.current) {
+    // --- Screen-wide effects ---
+    if (battleContainerRef.current) {
       try {
-        gsap.to(battleContainerRef.current, {
-          x: 'random(-6, 6)',
-          y: 'random(-4, 4)',
-          duration: 0.08,
-          repeat: 5,
-          yoyo: true,
-          ease: 'power1.inOut',
-          onComplete: () => {
-            gsap.set(battleContainerRef.current, { x: 0, y: 0 });
-          },
-        });
-        setFlashOpacity(0.35);
-        gsap.to({}, {
-          duration: 0.15,
-          onComplete: () => setFlashOpacity(0),
-          delay: 0.3,
-        });
-      } catch {
-        setFlashOpacity(0.35);
-        setTimeout(() => setFlashOpacity(0), 1000);
-      }
+        if (isUltimate) {
+          // Ultimate: heavy screen shake + purple/red flash
+          gsap.to(battleContainerRef.current, {
+            x: 'random(-14, 14)', y: 'random(-10, 10)',
+            duration: 0.07, repeat: 10, yoyo: true, ease: 'none',
+            onComplete: () => gsap.set(battleContainerRef.current, { x: 0, y: 0 }),
+          });
+          setFlashColor('radial-gradient(circle, rgba(147,51,234,0.5) 0%, rgba(147,51,234,0.15) 50%, transparent 70%)');
+          setFlashOpacity(0.5);
+          gsap.to({}, {
+            duration: 0.2, delay: 0.5,
+            onComplete: () => setFlashOpacity(0),
+          });
+        } else if (isStrike) {
+          // Strike: medium screen shake + glow
+          gsap.to(battleContainerRef.current, {
+            x: 'random(-8, 8)', y: 'random(-5, 5)',
+            duration: 0.07, repeat: 6, yoyo: true, ease: 'none',
+            onComplete: () => gsap.set(battleContainerRef.current, { x: 0, y: 0 }),
+          });
+          setFlashColor('radial-gradient(circle, rgba(96,165,250,0.35) 0%, rgba(96,165,250,0.1) 50%, transparent 70%)');
+          setFlashOpacity(0.25);
+          gsap.to({}, {
+            duration: 0.15, delay: 0.3,
+            onComplete: () => setFlashOpacity(0),
+          });
+        } else if (isMagic) {
+          // Magic: gentle screen hue shift
+          setFlashColor('radial-gradient(circle, rgba(34,197,94,0.2) 0%, rgba(34,197,94,0.05) 60%, transparent 80%)');
+          setFlashOpacity(0.15);
+          gsap.to({}, {
+            duration: 0.2, delay: 0.2,
+            onComplete: () => setFlashOpacity(0),
+          });
+        }
+
+        // Critical hit: extra golden flash on top
+        if (entry.critical) {
+          gsap.to(battleContainerRef.current, {
+            x: 'random(-6, 6)', y: 'random(-4, 4)',
+            duration: 0.08, repeat: 5, yoyo: true, ease: 'power1.inOut',
+            onComplete: () => gsap.set(battleContainerRef.current, { x: 0, y: 0 }),
+          });
+          setFlashColor('radial-gradient(circle, rgba(251,191,36,0.5) 0%, rgba(251,191,36,0.15) 50%, transparent 70%)');
+          setFlashOpacity(0.45);
+          gsap.to({}, {
+            duration: 0.15,
+            onComplete: () => setFlashOpacity(0),
+            delay: 0.2,
+          });
+        }
+      } catch { /* GSAP no disponible */ }
     }
   }, [currentLogIdx, battleLog]);
 
@@ -529,7 +611,7 @@ export function BattleScreen() {
               card={card}
               color={getCardColor(card.rarity)}
               isAlive={card.currentHp > 0}
-              isActive={phase !== 'player_turn' && card.cardId === activeCardId}
+              isActive={phase !== 'player_turn' && card.uid === activeCardSpec?.uid}
             />
           ))}
         </div>
@@ -615,20 +697,14 @@ export function BattleScreen() {
               card={card}
               color={getCardColor(card.rarity)}
               isAlive={card.currentHp > 0}
-              isActive={phase === 'player_turn' ? card === currentCard : card.cardId === activeCardId}
+              isActive={phase === 'player_turn' ? card === currentCard : card.uid === activeCardSpec?.uid}
             />
           ))}
         </div>
       </div>
 
       {/* Action menu / Result */}
-      {phase === 'result' ? (
-        <BattleResult
-          winner={battleWinner}
-          coinsEarned={battleCoinsEarned}
-          onConfirm={() => { clearBattle(); BGM.switchToMenu(); navigate('menu'); }}
-        />
-      ) : (
+      {phase !== 'result' && (
         <div style={{
           borderTop: '2px solid rgba(59,130,246,0.25)',
           background: 'rgba(12,12,25,0.95)',
@@ -640,7 +716,11 @@ export function BattleScreen() {
             <ActionMenu
               options={showSkillSubmenu ? skillOptions : actionOptions}
               focus={actionMenuFocus}
-              sublabels={showSkillSubmenu ? currentSkills.map((s) => `Potencia: ${s.power}`) : actionSublabels}
+              sublabels={showSkillSubmenu ? currentSkills.map((s) => {
+              if (s.currentCooldown > 0) return `CD: ${s.currentCooldown}t | Pot: ${s.power}`;
+              if (currentCard.currentMana < s.cost) return `PM insuficiente (${s.cost}) | Pot: ${s.power}`;
+              return `Coste: ${s.cost}PM | Pot: ${s.power}`;
+            }) : actionSublabels}
               onSelect={(value) => {
                 if (showSkillSubmenu) {
                   if (value === '__back__') {
@@ -680,10 +760,18 @@ export function BattleScreen() {
         </div>
       )}
 
+      {phase === 'result' && (
+        <BattleResult
+          winner={battleWinner}
+          coinsEarned={battleCoinsEarned}
+          onConfirm={() => { clearBattle(); BGM.switchToMenu(); navigate('menu'); }}
+        />
+      )}
+
       {/* Golden flash overlay on critical */}
       {flashOpacity > 0 && <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'radial-gradient(circle, rgba(251,191,36,0.4) 0%, rgba(251,191,36,0.1) 50%, transparent 70%)',
+        background: flashColor,
         opacity: flashOpacity,
         transition: 'opacity 0.15s ease-out',
         zIndex: 5,
@@ -771,18 +859,24 @@ function MiniBattleCard({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
+  const redraw = () => {
     if (canvasRef.current) {
-      const src = getCardCanvas(card.rarity, card.name, true);
+      const src = getCardCanvas(card.rarity, card.name, 130, card.cardId);
       const ctx = canvasRef.current.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
         ctx.drawImage(src, 0, 0, canvasRef.current.width, canvasRef.current.height);
       }
     }
-  }, [card.rarity, card.name]);
+  };
+
+  useEffect(() => {
+    redraw();
+    if (card.cardId) loadCardImage(card.cardId).then(redraw);
+  }, [card.rarity, card.name, card.cardId]);
 
   const hpPercent = card.currentHp / card.maxHp;
+  const manaPercent = card.currentMana / card.maxMana;
 
   return (
     <div
@@ -792,14 +886,14 @@ function MiniBattleCard({
         border: `2px solid ${isActive ? '#facc15' : isAlive ? color : '#374151'}`,
         boxShadow: isActive ? '0 0 16px rgba(250,204,21,0.25)' : undefined,
         borderRadius: '8px',
-        padding: '1rem',
+        padding: '0.75rem',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '0.5rem',
+        gap: '0.35rem',
         opacity: isAlive ? 1 : 0.35,
         transition: 'opacity 0.3s, border-color 0.3s, background 0.3s, box-shadow 0.3s',
-        width: '180px',
+        width: '160px',
       }}
     >
       <canvas
@@ -810,7 +904,7 @@ function MiniBattleCard({
       />
       <span style={{
         color: isAlive ? '#e5e7eb' : '#6b7280',
-        fontSize: '0.9375rem',
+        fontSize: '0.8125rem',
         fontWeight: 700,
         letterSpacing: '0.05em',
         textAlign: 'center',
@@ -818,7 +912,7 @@ function MiniBattleCard({
         {card.name}
       </span>
       {/* HP bar */}
-      <div style={{ width: '100%', height: '10px', background: '#374151', borderRadius: '4px', overflow: 'hidden' }}>
+      <div style={{ width: '100%', height: '8px', background: '#374151', borderRadius: '4px', overflow: 'hidden' }}>
         <div style={{
           width: `${hpPercent * 100}%`,
           height: '100%',
@@ -827,21 +921,25 @@ function MiniBattleCard({
           transition: 'width 0.5s ease',
         }} />
       </div>
-      <span style={{
-        color: isAlive ? '#d1d5db' : '#6b7280',
-        fontSize: '0.8125rem',
-        fontWeight: 600,
-      }}>
-        {Math.max(0, card.currentHp)}/{card.maxHp}
-      </span>
-      <span style={{
-        color: '#60a5fa',
-        fontSize: '0.6875rem',
-        fontWeight: 700,
-        letterSpacing: '0.03em',
-      }}>
-        SPD {card.stats.speed}
-      </span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '0.625rem', color: '#d1d5db', fontWeight: 600 }}>
+        <span>HP {Math.max(0, card.currentHp)}/{card.maxHp}</span>
+        <span style={{ color: '#60a5fa' }}>SPD {card.stats.speed}</span>
+      </div>
+      {/* Mana bar */}
+      <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div style={{ flex: 1, height: '6px', background: '#1e1e3a', borderRadius: '3px', overflow: 'hidden' }}>
+          <div style={{
+            width: `${manaPercent * 100}%`,
+            height: '100%',
+            background: '#8b5cf6',
+            borderRadius: '3px',
+            transition: 'width 0.5s ease',
+          }} />
+        </div>
+        <span style={{ color: '#a78bfa', fontSize: '0.6rem', fontWeight: 600 }}>
+          {Math.round(card.currentMana)}/{card.maxMana}
+        </span>
+      </div>
       {card.skipNextTurn && (
         <span style={{
           color: '#60a5fa', fontSize: '0.65rem', fontWeight: 800,
@@ -891,32 +989,32 @@ function MiniBattleCard({
 
 
 
-function ActionMenu({ options, focus, onSelect, onFocusChange, sublabels }: { options: { label: string; value: string }[]; focus: number; onSelect?: (value: string) => void; onFocusChange?: (i: number) => void; sublabels?: string[] }) {
+function ActionMenu({ options, focus, onSelect, onFocusChange, sublabels }: { options: { label: string; value: string; disabled?: boolean }[]; focus: number; onSelect?: (value: string) => void; onFocusChange?: (i: number) => void; sublabels?: string[] }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'center', gap: '1rem',
       padding: '1.25rem 1.5rem 1.75rem',
     }}>
       {options.map((opt, i) => {
-        const active = i === focus;
+        const active = i === focus && !opt.disabled;
         return (
           <div
             key={opt.value}
-            onClick={() => onSelect?.(opt.value)}
+            onClick={() => { if (!opt.disabled) onSelect?.(opt.value); }}
             onMouseEnter={() => onFocusChange?.(i)}
             style={{
               padding: '0.5rem 1.5rem',
-              background: active ? '#3b82f6' : '#334155',
-              border: `2px solid ${active ? '#93c5fd' : '#64748b'}`,
+              background: active ? '#3b82f6' : opt.disabled ? '#1e1e3a' : '#334155',
+              border: `2px solid ${active ? '#93c5fd' : opt.disabled ? '#374151' : '#64748b'}`,
               borderRadius: '8px',
-              color: '#ffffff',
+              color: opt.disabled ? '#6b7280' : '#ffffff',
               fontWeight: 700,
               fontSize: '1.125rem',
               letterSpacing: '0.08em',
               textAlign: 'center',
               boxShadow: active ? '0 0 16px rgba(59,130,246,0.4)' : 'none',
               transform: active ? 'scale(1.06)' : 'scale(1)',
-              cursor: 'pointer',
+              cursor: opt.disabled ? 'default' : 'pointer',
               transition: 'all 0.12s ease',
             }}
           >
@@ -1012,51 +1110,69 @@ function BattleResult({
   const isVictory = winner === 'player';
 
   return (
-    <div style={{
-      padding: '1.5rem',
-      borderTop: '1px solid rgba(59,130,246,0.1)',
-      background: 'rgba(15,15,26,0.98)',
-      textAlign: 'center',
-      position: 'relative',
-      zIndex: 20,
-    }}>
-      <h2 style={{
-        fontSize: '1.75rem',
-        fontWeight: 900,
-        color: isVictory ? '#fbbf24' : '#ef4444',
-        letterSpacing: '0.1em',
-        transform: 'skewX(-10deg)',
-        margin: '0 0 0.5rem 0',
-        textShadow: isVictory
-          ? '0 0 20px rgba(251,191,36,0.3)'
-          : '0 0 20px rgba(239,68,68,0.3)',
-      }}>
-        {isVictory ? '¡VICTORIA!' : 'DERROTA'}
-      </h2>
-      <div style={{ color: '#9ca3af', fontSize: '0.9375rem', marginBottom: '1rem' }}>
-        {isVictory ? (
-          <span>Ganaste <strong style={{ color: '#fbbf24' }}>{coinsEarned}</strong> monedas</span>
-        ) : (
-          <span>Perdiste <strong style={{ color: '#ef4444' }}>{Math.abs(coinsEarned)}</strong> monedas</span>
-        )}
-      </div>
-      <button
-        onClick={onConfirm}
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 100,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
         style={{
-          padding: '0.75rem 2.5rem',
-          fontSize: '1rem',
-          fontWeight: 700,
-          background: isVictory ? '#2563eb' : '#374151',
-          color: 'white',
-          border: `2px solid ${isVictory ? '#60a5fa' : '#6b7280'}`,
-          borderRadius: '4px',
-          transform: 'skewX(-10deg)',
-          cursor: 'pointer',
-          letterSpacing: '0.1em',
+          background: '#16162a',
+          border: `2px solid ${isVictory ? '#facc1550' : '#ef444450'}`,
+          borderRadius: '12px',
+          padding: '2.5rem',
+          textAlign: 'center',
+          maxWidth: '400px',
+          width: '90%',
+          boxShadow: isVictory
+            ? '0 0 60px rgba(250,204,21,0.15)'
+            : '0 0 60px rgba(239,68,68,0.15)',
         }}
       >
-        VOLVER AL MENÚ
-      </button>
+        <h2 style={{
+          fontSize: '2rem',
+          fontWeight: 900,
+          color: isVictory ? '#fbbf24' : '#ef4444',
+          letterSpacing: '0.1em',
+          transform: 'skewX(-10deg)',
+          margin: '0 0 0.75rem 0',
+          textShadow: isVictory
+            ? '0 0 20px rgba(251,191,36,0.3)'
+            : '0 0 20px rgba(239,68,68,0.3)',
+        }}>
+          {isVictory ? '¡VICTORIA!' : 'DERROTA'}
+        </h2>
+        <div style={{ color: '#9ca3af', fontSize: '1rem', marginBottom: '1.5rem' }}>
+          {isVictory ? (
+            <span>Ganaste <strong style={{ color: '#fbbf24' }}>{coinsEarned}</strong> monedas</span>
+          ) : (
+            <span>Perdiste <strong style={{ color: '#ef4444' }}>{Math.abs(coinsEarned)}</strong> monedas</span>
+          )}
+        </div>
+        <button
+          onClick={onConfirm}
+          style={{
+            padding: '0.75rem 2.5rem',
+            fontSize: '1rem',
+            fontWeight: 700,
+            background: isVictory ? '#2563eb' : '#374151',
+            color: 'white',
+            border: `2px solid ${isVictory ? '#60a5fa' : '#6b7280'}`,
+            borderRadius: '4px',
+            transform: 'skewX(-10deg)',
+            cursor: 'pointer',
+            letterSpacing: '0.1em',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = isVictory ? '#1d4ed8' : '#4b5563'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = isVictory ? '#2563eb' : '#374151'; }}
+        >
+          VOLVER AL MENÚ
+        </button>
+      </div>
     </div>
   );
 }

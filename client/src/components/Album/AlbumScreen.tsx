@@ -172,7 +172,8 @@ export function AlbumScreen() {
               <PlaceholderCard
                 rarity={card.rarity}
                 name={owned ? card.name : '???'}
-                compact
+                size={140}
+                cardId={owned ? card.id : undefined}
               />
             </div>
           );

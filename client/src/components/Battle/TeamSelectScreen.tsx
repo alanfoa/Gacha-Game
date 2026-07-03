@@ -5,6 +5,7 @@ import { useGameStore, type CardData } from '../../store/gameStore';
 import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
 import { getCardCanvas } from '../Sobre/cardTexture';
+import { loadCardImage } from '../../utils/cardImage';
 
 export function TeamSelectScreen() {
   const back = useScreenStore((s) => s.back);
@@ -243,15 +244,19 @@ function CardSelectButton({
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (canvasRef.current) {
-      const src = getCardCanvas(card.rarity, card.name, true);
-      const ctx = canvasRef.current.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        ctx.drawImage(src, 0, 0, canvasRef.current.width, canvasRef.current.height);
+    const redraw = () => {
+      if (canvasRef.current) {
+        const src = getCardCanvas(card.rarity, card.name, 120, card.id);
+        const ctx = canvasRef.current.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+          ctx.drawImage(src, 0, 0, canvasRef.current.width, canvasRef.current.height);
+        }
       }
-    }
-  }, [card.rarity, card.name]);
+    };
+    redraw();
+    if (card.id) loadCardImage(card.id).then(redraw);
+  }, [card.rarity, card.name, card.id]);
 
   useEffect(() => {
     if (!ref.current) return;

@@ -22,19 +22,34 @@ export interface CardData {
   stats: { attack: number; defense: number; magic: number; luck: number; speed: number };
   element: string;
   hp: number;
-  attackName?: string;
+  maxMana: number;
+  attackName: string;
+  attackCost: number;
+  attackCooldown: number;
   magicName?: string;
+  magicCost?: number;
+  magicCooldown?: number;
+  skillName?: string;
+  skillCost?: number;
+  skillCooldown?: number;
+  ultimateName?: string;
+  ultimateCost?: number;
+  ultimateCooldown?: number;
 }
 
 export interface BattleSkill {
   id: string;
   name: string;
-  type: 'ATTACK' | 'MAGIC' | 'DEFEND' | 'SKILL';
+  type: 'ATTACK' | 'MAGIC' | 'SKILL' | 'ULTIMATE' | 'DEFEND';
   power: number;
+  cost: number;
+  cooldown: number;
+  currentCooldown: number;
   description: string;
 }
 
 export interface BattleCardState {
+  uid?: string;
   cardId: string;
   name: string;
   rarity: string;
@@ -42,6 +57,8 @@ export interface BattleCardState {
   stats: { attack: number; defense: number; magic: number; luck: number; speed: number };
   currentHp: number;
   maxHp: number;
+  currentMana: number;
+  maxMana: number;
   skills: BattleSkill[];
   statusEffects: { type: string; remainingTurns: number; value: number; sourceName: string }[];
   skipNextTurn: boolean;
@@ -49,10 +66,13 @@ export interface BattleCardState {
 
 export interface BattleLogEntry {
   cardId: string;
+  cardUid?: string;
   targetId: string;
+  targetUid?: string;
   damage: number;
   critical: boolean;
   action: string;
+  skillId?: string;
   message: string;
 }
 
