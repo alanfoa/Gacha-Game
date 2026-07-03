@@ -76,72 +76,47 @@ function noise(duration: number, volume = 0.05) {
   source.start(t);
 }
 
-export const SFX = {
-  nav() {
-    tone(600, 0.06, 'square', 0.06);
-  },
-
-  confirm() {
-    const c = getCtx();
-    if (!c) return;
-    const now = c.currentTime;
-    tone(400, 0.1, 'square', 0.08, now);
-    tone(600, 0.15, 'square', 0.06, now + 0.08);
-  },
-
-  back() {
-    const c = getCtx();
-    if (!c) return;
-    const now = c.currentTime;
-    tone(400, 0.1, 'square', 0.06, now);
-    tone(300, 0.12, 'square', 0.06, now + 0.08);
-  },
-
-  packOpen() {
-    noise(0.3, 0.08);
-    const c = getCtx();
-    if (!c) return;
-    const now = c.currentTime;
-    tone(200, 0.15, 'sawtooth', 0.06, now);
-    tone(300, 0.1, 'sawtooth', 0.04, now + 0.1);
-  },
-
-  cardReveal(rarity: string) {
-    const c = getCtx();
-    if (!c) return;
-    const now = c.currentTime;
-    switch (rarity) {
-      case 'common':
-        tone(800, 0.2, 'square', 0.07, now);
-        break;
-      case 'rare':
-        tone(500, 0.15, 'square', 0.07, now);
-        tone(800, 0.2, 'square', 0.06, now + 0.12);
-        break;
-      case 'epic':
-        tone(400, 0.12, 'square', 0.08, now);
-        tone(600, 0.12, 'square', 0.07, now + 0.1);
-        tone(900, 0.25, 'square', 0.07, now + 0.2);
-        break;
-      case 'legendary': {
-        tone(300, 0.12, 'square', 0.08, now);
-        tone(500, 0.12, 'square', 0.08, now + 0.1);
-        tone(700, 0.12, 'square', 0.08, now + 0.2);
-        tone(1000, 0.35, 'square', 0.1, now + 0.3);
-        tone(1200, 0.4, 'triangle', 0.08, now + 0.4);
-        break;
+function createUiSfx(src: string) {
+  let howl: Howl | null = null;
+  return () => {
+    if (!howl) {
+      try {
+        howl = new Howl({ src: [src], volume: 0.5, preload: true });
+      } catch {
+        return;
       }
     }
-  },
+    try { howl.play(); } catch { /* ignore */ }
+  };
+}
 
-  duplicate() {
-    const c = getCtx();
-    if (!c) return;
-    const now = c.currentTime;
-    tone(500, 0.12, 'square', 0.07, now);
-    tone(400, 0.12, 'square', 0.06, now + 0.12);
-    tone(300, 0.2, 'square', 0.06, now + 0.24);
-  },
+const RARITY_FILE: Record<string, string> = {
+  COMUN: 'common', RARO: 'rare', EPICO: 'epic', LEGENDARIO: 'legendary',
+};
+
+function createRaritySfx() {
+  const howls: Record<string, Howl | null> = {};
+  return (rarity: string) => {
+    const file = RARITY_FILE[rarity];
+    if (!file) return;
+    if (!howls[rarity]) {
+      try {
+        howls[rarity] = new Howl({ src: [`/audio/ui/card_reveal_${file}.wav`], volume: 0.5, preload: true });
+      } catch {
+        return;
+      }
+    }
+    try { howls[rarity]!.play(); } catch { /* ignore */ }
+  };
+}
+
+export const SFX = {
+  nav: createUiSfx('/audio/ui/nav.wav'),
+  confirm: createUiSfx('/audio/ui/confirm.wav'),
+  back: createUiSfx('/audio/ui/back.wav'),
+  packOpen: createUiSfx('/audio/ui/pack_open.wav'),
+  cardReveal: createRaritySfx(),
+  duplicate: createUiSfx('/audio/ui/duplicate.wav'),
 
   // --- Battle SFX (lazy Howl) ---
 

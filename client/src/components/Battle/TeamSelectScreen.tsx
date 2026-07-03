@@ -24,6 +24,12 @@ export function TeamSelectScreen() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mountedAt = useRef(Date.now());
 
+  const handleStartBattle = useCallback(async () => {
+    play('confirm');
+    await startBattle();
+    navigate('battle');
+  }, [play, startBattle, navigate]);
+
   const handleAction = useCallback((action: GameAction) => {
     const elapsed = Date.now() - mountedAt.current;
     if (elapsed < 300) return;
@@ -71,15 +77,21 @@ export function TeamSelectScreen() {
 
     if (action === 'CONFIRM') {
       const card = availableCards[focusRef.current];
-      if (card) {
-        toggleSelectCard(card.id);
-        play('confirm');
+      if (!card) return;
+      // If 3 already selected and this card is not selected → start battle
+      if (selectedCardIds.length === 3 && !selectedCardIds.includes(card.id)) {
+        handleStartBattle();
+        return;
       }
-      if (selectedCardIds.length === 2 && !selectedCardIds.includes(availableCards[focusRef.current]?.id)) {
-        // Will be 3 after toggle, auto-start
+      // Toggle selection
+      toggleSelectCard(card.id);
+      play('confirm');
+      // Auto-start when 3 selected after this toggle
+      if (selectedCardIds.length === 2 && !selectedCardIds.includes(card.id)) {
+        setTimeout(() => handleStartBattle(), 200);
       }
     }
-  }, [back, play, availableCards, toggleSelectCard, selectedCardIds]);
+  }, [back, play, availableCards, toggleSelectCard, selectedCardIds, handleStartBattle]);
 
   useInputManager(handleAction);
 
@@ -90,12 +102,6 @@ export function TeamSelectScreen() {
         .to('.ts-card', { opacity: 1, scale: 1, stagger: 0.03 });
     } catch { /* GSAP no disponible */ }
   }, [availableCards.length]);
-
-  const handleStartBattle = useCallback(async () => {
-    play('confirm');
-    await startBattle();
-    navigate('battle');
-  }, [play, startBattle, navigate]);
 
   return (
     <div
