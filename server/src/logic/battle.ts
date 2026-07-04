@@ -413,8 +413,7 @@ export function processTurn(
     if (!card || card.currentHp <= 0 || card.skipNextTurn) continue;
 
     if (pa.action === 'DEFEND') {
-      card.isDefending = true;
-      logs.push(logEntry(card, card, 'DEFEND', 0, false, `${card.name} se defiende`));
+      pool.push({ card, actionType: 'DEFEND', target: card });
       continue;
     }
 
@@ -454,8 +453,7 @@ export function processTurn(
     if (!card || card.currentHp <= 0 || card.skipNextTurn) continue;
 
     if (ea.action === 'DEFEND') {
-      card.isDefending = true;
-      logs.push(logEntry(card, card, 'DEFEND', 0, false, `${card.name} se defiende`));
+      pool.push({ card, actionType: 'DEFEND', target: card });
       continue;
     }
 
@@ -487,6 +485,12 @@ export function processTurn(
   // Step 6: Process actions in speed order
   for (const pending of pool) {
     if (pending.card.currentHp <= 0 || pending.target.currentHp <= 0) continue;
+
+    if (pending.actionType === 'DEFEND') {
+      pending.card.isDefending = true;
+      logs.push(logEntry(pending.card, pending.card, 'DEFEND', 0, false, `${pending.card.name} se defiende`));
+      continue;
+    }
 
     const skill = pending.skillId
       ? pending.card.skills.find((s) => s.id === pending.skillId)

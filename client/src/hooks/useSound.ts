@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { SFX, BGM, initAudio } from '../audio/sounds';
+import { SFX, BGM, initAudio, DEFAULT_MENU_VOLUME } from '../audio/sounds';
 
 export function useSound() {
   const bgmRef = useRef(false);
@@ -9,7 +9,7 @@ export function useSound() {
     (SFX[sound] as (...args: any[]) => void)(...args);
   }, []);
 
-  const startBGM = useCallback((volume = 0.04) => {
+  const startBGM = useCallback((volume = DEFAULT_MENU_VOLUME) => {
     if (bgmRef.current) return;
     bgmRef.current = true;
     BGM.start(volume);

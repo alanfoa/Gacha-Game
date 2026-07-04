@@ -21,7 +21,9 @@ db.exec(`
     legendary_count INTEGER NOT NULL DEFAULT 0,
     win_streak INTEGER NOT NULL DEFAULT 0,
     total_battles INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    last_played TEXT DEFAULT NULL,
+    play_time INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS inventory (

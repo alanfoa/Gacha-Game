@@ -122,10 +122,8 @@ router.post('/battle/action', (req, res) => {
       incrementMission(user.id, 'earn_coins', result.coinsEarned);
       sessions.delete(battleId);
     } else if (result.winner === 'enemy') {
-      const loseCost = 10;
-      db.prepare('UPDATE users SET coins = MAX(0, coins - ?), win_streak = 0 WHERE id = ?')
-        .run(loseCost, user.id);
-      result.coinsEarned = -loseCost;
+      db.prepare('UPDATE users SET win_streak = 0 WHERE id = ?').run(user.id);
+      result.coinsEarned = 0;
       sessions.delete(battleId);
     }
 

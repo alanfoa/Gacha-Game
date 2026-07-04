@@ -3,6 +3,9 @@ import gsap from 'gsap';
 import { useScreenStore } from '../../store/screenStore';
 import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
+import { MusicPlayer } from '../UI/MusicPlayer';
+import { BGM, DEFAULT_MENU_VOLUME } from '../../audio/sounds';
+import { useGameStore } from '../../store/gameStore';
 
 const OPTIONS = [
   { label: 'ABRIR SOBRE', screen: 'pack' as const },
@@ -10,10 +13,12 @@ const OPTIONS = [
   { label: 'MISIONES', screen: 'missions' as const },
   { label: 'MI ÁLBUM', screen: 'album' as const },
   { label: 'OPCIONES', screen: 'options' as const },
+  { label: 'CERRAR SESIÓN', action: 'logout' as const },
 ];
 
 export function MenuScreen() {
   const navigate = useScreenStore((s) => s.navigate);
+  const logout = useGameStore((s) => s.logout);
   const [focus, setFocus] = useState(0);
   const focusRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -36,11 +41,28 @@ export function MenuScreen() {
     }
     if (action === 'CONFIRM') {
       play('confirm');
-      navigate(OPTIONS[focusRef.current].screen);
+      const opt = OPTIONS[focusRef.current];
+      if ('screen' in opt) {
+        navigate(opt.screen);
+      } else if (opt.action === 'logout') {
+        logout();
+        BGM.switchToMenu();
+        navigate('mainmenu');
+      }
     }
-  }, [navigate, play]);
+    if (action === 'BACK') {
+      navigate('mainmenu');
+    }
+  }, [navigate, play, logout]);
 
   useInputManager(handleAction);
+
+  // Auto-start BGM if not already playing (covers auto-detect flow)
+  useEffect(() => {
+    if (!BGM.isPlaying()) {
+      BGM.start(DEFAULT_MENU_VOLUME);
+    }
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -126,23 +148,23 @@ export function MenuScreen() {
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'relative', zIndex: 10 }}>
-        {OPTIONS.map((opt, i) => (
-          <MenuOption
-            key={opt.label}
-            label={opt.label}
-            focused={i === focus}
-            onClick={() => {
-              focusRef.current = i;
-              setFocus(i);
-              play('confirm');
-              navigate(opt.screen);
-            }}
-            onHover={() => {
-              focusRef.current = i;
-              setFocus(i);
-            }}
-          />
-        ))}
+        {OPTIONS.map((opt, i) => {
+          const handleClick = 'screen' in opt
+            ? () => { focusRef.current = i; setFocus(i); play('confirm'); navigate(opt.screen); }
+            : () => { focusRef.current = i; setFocus(i); play('confirm'); logout(); BGM.switchToMenu(); navigate('mainmenu'); };
+          return (
+            <MenuOption
+              key={opt.label}
+              label={opt.label}
+              focused={i === focus}
+              onClick={handleClick}
+              onHover={() => {
+                focusRef.current = i;
+                setFocus(i);
+              }}
+            />
+          );
+        })}
       </div>
 
       <p
@@ -157,6 +179,8 @@ export function MenuScreen() {
       >
         FLECHAS · ENTER · GAMEPAD
       </p>
+
+      <MusicPlayer />
     </div>
   );
 }

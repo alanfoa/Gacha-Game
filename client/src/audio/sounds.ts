@@ -30,52 +30,6 @@ export function getCtx(): AudioContext | null {
   }
 }
 
-function tone(
-  freq: number,
-  duration: number,
-  type: OscillatorType = 'square',
-  volume = 0.08,
-  startTime?: number,
-) {
-  const c = getCtx();
-  if (!c) return;
-  const t = startTime ?? c.currentTime;
-  const osc = c.createOscillator();
-  const gain = c.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, t);
-  gain.gain.setValueAtTime(volume, t);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-  osc.connect(gain);
-  gain.connect(c.destination);
-  osc.start(t);
-  osc.stop(t + duration + 0.05);
-}
-
-function noise(duration: number, volume = 0.05) {
-  const c = getCtx();
-  if (!c) return;
-  const t = c.currentTime;
-  const bufferSize = Math.floor(c.sampleRate * duration);
-  const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    data[i] = Math.random() * 2 - 1;
-  }
-  const source = c.createBufferSource();
-  source.buffer = buffer;
-  const gain = c.createGain();
-  gain.gain.setValueAtTime(volume, t);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-  const filter = c.createBiquadFilter();
-  filter.type = 'highpass';
-  filter.frequency.setValueAtTime(2000, t);
-  source.connect(filter);
-  filter.connect(gain);
-  gain.connect(c.destination);
-  source.start(t);
-}
-
 function createUiSfx(src: string) {
   let howl: Howl | null = null;
   return () => {
@@ -144,29 +98,60 @@ function createBattleSfx(src: string) {
   };
 }
 
+export const MENU_TRACKS = [
+  { src: '/audio/bgm.ogg', name: 'Tema Principal' },
+  { src: '/audio/bgm_menu_02.ogg', name: 'Melodía Nocturna' },
+  { src: '/audio/bgm_menu_03.ogg', name: 'Ritmo Urbano' },
+];
+
+const BATTLE_PLAYLIST = [
+  '/audio/bgm_battle.webm',
+];
+
 let bgmHowl: Howl | null = null;
 let bgmHowlId: number | null = null;
-let bgmVolume = 0.25;
+export const DEFAULT_MENU_VOLUME = 0.25;
+let bgmVolume = DEFAULT_MENU_VOLUME;
+let currentTrackIndex = -1;
+let lastBattleIndex = -1;
+let bgmPaused = false;
+
+function pickRandom(max: number, lastIndex: number): number {
+  if (max <= 1) return 0;
+  let idx: number;
+  do {
+    idx = Math.floor(Math.random() * max);
+  } while (idx === lastIndex);
+  return idx;
+}
 
 export function getBgmVolume() {
   return bgmVolume;
 }
 
-function startBgmInternal(src: string, volume?: number) {
+function startBgmInternal(src: string, volume?: number, loop = true) {
   initAudio();
   if (bgmHowl) {
     try { bgmHowl.stop(); } catch {}
     bgmHowl = null;
     bgmHowlId = null;
   }
+  if (!src) return;
   if (volume !== undefined) bgmVolume = volume;
   try {
     bgmHowl = new Howl({
       src: [src],
-      loop: true,
+      loop,
       volume: bgmVolume,
+      onend: !loop && MENU_TRACKS.length > 1
+        ? () => {
+            currentTrackIndex = (currentTrackIndex + 1) % MENU_TRACKS.length;
+            startBgmInternal(MENU_TRACKS[currentTrackIndex].src, undefined, false);
+          }
+        : undefined,
     });
     bgmHowlId = bgmHowl.play();
+    bgmPaused = false;
   } catch {
     // ignore
   }
@@ -174,31 +159,53 @@ function startBgmInternal(src: string, volume?: number) {
 
 export const BGM = {
   start(volume?: number) {
-    startBgmInternal('/audio/bgm.ogg', volume);
+    const index = pickRandom(MENU_TRACKS.length, currentTrackIndex);
+    currentTrackIndex = index;
+    startBgmInternal(MENU_TRACKS[index].src, volume, false);
   },
 
   startBattle(volume?: number) {
-    startBgmInternal('/audio/bgm_battle.webm', volume);
+    const index = pickRandom(BATTLE_PLAYLIST.length, lastBattleIndex);
+    lastBattleIndex = index;
+    startBgmInternal(BATTLE_PLAYLIST[index], volume, true);
   },
 
   switchToMenu(volume?: number) {
-    initAudio();
     if (bgmHowl) {
       try { bgmHowl.stop(); } catch {}
       bgmHowl = null;
       bgmHowlId = null;
     }
-    if (volume !== undefined) bgmVolume = volume;
-    try {
-      bgmHowl = new Howl({
-        src: ['/audio/bgm.ogg'],
-        loop: true,
-        volume: bgmVolume,
-      });
-      bgmHowlId = bgmHowl.play();
-    } catch {
-      // ignore
-    }
+    const index = pickRandom(MENU_TRACKS.length, currentTrackIndex);
+    currentTrackIndex = index;
+    startBgmInternal(MENU_TRACKS[index]?.src, volume, false);
+  },
+
+  nextTrack() {
+    if (MENU_TRACKS.length === 0) return;
+    currentTrackIndex = (currentTrackIndex + 1) % MENU_TRACKS.length;
+    startBgmInternal(MENU_TRACKS[currentTrackIndex].src, undefined, false);
+  },
+
+  prevTrack() {
+    if (MENU_TRACKS.length === 0) return;
+    currentTrackIndex = (currentTrackIndex - 1 + MENU_TRACKS.length) % MENU_TRACKS.length;
+    startBgmInternal(MENU_TRACKS[currentTrackIndex].src, undefined, false);
+  },
+
+  playTrack(index: number) {
+    if (index < 0 || index >= MENU_TRACKS.length) return;
+    currentTrackIndex = index;
+    startBgmInternal(MENU_TRACKS[index].src, undefined, false);
+  },
+
+  getCurrentTrack() {
+    if (currentTrackIndex < 0 || currentTrackIndex >= MENU_TRACKS.length) return null;
+    return MENU_TRACKS[currentTrackIndex];
+  },
+
+  getCurrentTrackIndex() {
+    return currentTrackIndex;
   },
 
   stop() {
@@ -216,6 +223,7 @@ export const BGM = {
   pause() {
     if (!bgmHowl || bgmHowlId === null) return;
     try { bgmHowl.pause(bgmHowlId); } catch {}
+    bgmPaused = true;
   },
 
   resume() {
@@ -224,10 +232,19 @@ export const BGM = {
       if (bgmHowlId !== null) bgmHowl.play(bgmHowlId);
       else bgmHowlId = bgmHowl.play();
     } catch {}
+    bgmPaused = false;
+  },
+
+  togglePause() {
+    if (bgmPaused) { BGM.resume(); } else { BGM.pause(); }
   },
 
   isPlaying() {
-    return bgmHowl !== null && bgmHowlId !== null;
+    return bgmHowl !== null && bgmHowlId !== null && !bgmPaused;
+  },
+
+  isPaused() {
+    return bgmPaused;
   },
 
   setVolume(vol: number) {
@@ -238,11 +255,20 @@ export const BGM = {
   },
 };
 
-// Unlock Howler's AudioContext on first user interaction
+// Unlock AudioContext on first user interaction (click, key, gamepad)
 function unlockHowler() {
   document.removeEventListener('pointerdown', unlockHowler);
   document.removeEventListener('keydown', unlockHowler);
-  initAudio();
+  window.removeEventListener('gamepadconnected', unlockHowler);
+  if (!audioInit) initAudio();
+  if (ctx?.state === 'suspended') ctx.resume();
+  if (Howler.ctx?.state === 'suspended') Howler.ctx.resume();
 }
 document.addEventListener('pointerdown', unlockHowler, { once: true });
 document.addEventListener('keydown', unlockHowler, { once: true });
+window.addEventListener('gamepadconnected', unlockHowler, { once: true });
+
+// Auto-unlock in Electron (no autoplay restriction)
+if (navigator.userAgent.includes('Electron')) {
+  setTimeout(() => unlockHowler(), 0);
+}

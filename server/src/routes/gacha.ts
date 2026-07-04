@@ -10,6 +10,7 @@ import { incrementMission } from '../logic/missions.js';
 interface DbUser {
   id: string; name: string; coins: number; pity_count: number;
   total_pulls: number; legendary_count: number; token: string;
+  play_time: number; last_played: string | null;
 }
 
 function getUser(req: Request): DbUser | null {
@@ -62,6 +63,8 @@ router.get('/profile', (req, res) => {
     const user = getUser(req);
     if (!user) return sendError(res, 401, 'Token invalido');
 
+    db.prepare('UPDATE users SET last_played = datetime(\'now\') WHERE id = ?').run(user.id);
+
     const inventory = db.prepare(
       'SELECT card_id FROM inventory WHERE user_id = ?'
     ).all(user.id) as { card_id: string }[];
@@ -77,12 +80,45 @@ router.get('/profile', (req, res) => {
         pityCount: user.pity_count,
         totalPulls: user.total_pulls,
         legendaryCount: user.legendary_count,
+        playTime: user.play_time,
+        lastPlayed: user.last_played,
       },
       inventory: cardIds,
       unlockedCards: uniqueCards,
     });
   } catch {
     sendError(res, 500, 'Error al obtener perfil');
+  }
+});
+
+router.post('/profiles/batch', (req, res) => {
+  try {
+    const { tokens } = req.body;
+    if (!Array.isArray(tokens)) return sendError(res, 400, 'tokens requerido');
+
+    const profiles = tokens.map((token: string | null) => {
+      if (!token) return null;
+      try {
+        const row = db.prepare('SELECT * FROM users WHERE token = ?').get(token) as DbUser | undefined;
+        if (!row) return null;
+        const cardCount = (db.prepare(
+          'SELECT COUNT(DISTINCT card_id) as count FROM inventory WHERE user_id = ?'
+        ).get(row.id) as { count: number }).count;
+        return {
+          name: row.name,
+          coins: row.coins,
+          cardCount,
+          playTime: row.play_time,
+          lastPlayed: row.last_played,
+        };
+      } catch {
+        return null;
+      }
+    });
+
+    res.json({ profiles });
+  } catch {
+    sendError(res, 500, 'Error al obtener perfiles');
   }
 });
 
@@ -98,7 +134,8 @@ router.post('/open', (req, res) => {
   const packType = PACK_TYPES.find((p) => p.id === packId);
   if (!packType) return sendError(res, 400, 'Tipo de sobre invalido');
 
-  if (user.coins < packType.cost) {
+  const free = !!req.body.free;
+  if (!free && user.coins < packType.cost) {
     return sendError(res, 400, 'Monedas insuficientes');
   }
 
@@ -143,9 +180,15 @@ router.post('/open', (req, res) => {
     }
 
     // Update user coins and stats
-    db.prepare(
-      'UPDATE users SET coins = coins - ? + ?, pity_count = ?, total_pulls = ?, legendary_count = ? WHERE id = ?'
-    ).run(packType.cost, totalCoinsEarned, newPityCount, newTotalPulls, newLegendaryCount, user.id);
+    if (free) {
+      db.prepare(
+        'UPDATE users SET coins = coins + ?, pity_count = ?, total_pulls = ?, legendary_count = ? WHERE id = ?'
+      ).run(totalCoinsEarned, newPityCount, newTotalPulls, newLegendaryCount, user.id);
+    } else {
+      db.prepare(
+        'UPDATE users SET coins = coins - ? + ?, pity_count = ?, total_pulls = ?, legendary_count = ? WHERE id = ?'
+      ).run(packType.cost, totalCoinsEarned, newPityCount, newTotalPulls, newLegendaryCount, user.id);
+    }
 
     const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id) as DbUser | undefined;
 

@@ -19,7 +19,6 @@ export function TeamSelectScreen() {
   }, [allCards, inventory]);
 
   const cols = 4;
-  const totalItems = availableCards.length + 1; // +1 for the start button
   const BUTTON_INDEX = availableCards.length; // focus index for the button
   const [focus, setFocus] = useState(0);
   const focusRef = useRef(0);

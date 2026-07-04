@@ -194,7 +194,7 @@ function CardMesh({ card, index, selected, total }: { card: FanCard; index: numb
   );
 }
 
-export function PackFan({ cards, selectedIndex, onSelect }: PackFanProps) {
+export function PackFan({ cards, selectedIndex, onSelect: _onSelect }: PackFanProps) {
   const count = cards.length;
 
   return (

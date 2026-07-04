@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import gsap from 'gsap';
 import { useScreenStore } from '../../store/screenStore';
 import { useGameStore } from '../../store/gameStore';
@@ -12,10 +12,14 @@ type Phase = 'store' | 'opening' | 'revealed' | 'contents';
 
 export function PackScreen() {
   const back = useScreenStore((s) => s.back);
+  const navigate = useScreenStore((s) => s.navigate);
+  const screenParams = useScreenStore((s) => s.screenParams);
   const { user, packTypes, openPack, fetchPacks } = useGameStore();
   const flashRef = useRef<HTMLDivElement>(null);
   const skipRef = useRef<HTMLButtonElement>(null);
   const { play } = useSound();
+  const autoOpenedRef = useRef(false);
+  const wasFreePack = useRef(false);
 
   const [phase, setPhase] = useState<Phase>('store');
   const [selectedPack, setSelectedPack] = useState<PackTypeInfo | null>(null);
@@ -31,7 +35,6 @@ export function PackScreen() {
   const [focus, setFocus] = useState(0);
   const focusRef = useRef(0);
 
-  const openBtnRef = useRef<HTMLButtonElement>(null);
   const backBtnRef = useRef<HTMLButtonElement>(null);
   const revealBtnRef = useRef<HTMLButtonElement>(null);
   const contentsBtnRef = useRef<HTMLButtonElement>(null);
@@ -42,6 +45,15 @@ export function PackScreen() {
   useEffect(() => {
     if (packTypes.length === 0) fetchPacks();
   }, [packTypes, fetchPacks]);
+
+  useEffect(() => {
+    if (screenParams?.freePack && packTypes.length > 0 && !autoOpenedRef.current) {
+      autoOpenedRef.current = true;
+      wasFreePack.current = true;
+      const basic = packTypes.find((p) => p.id === 'basico');
+      if (basic) handleOpenPack(basic, true);
+    }
+  }, [screenParams, packTypes]);
 
   const doHype = (rarity: string) => {
     if (rarity !== 'EPICO' && rarity !== 'LEGENDARIO') return;
@@ -62,6 +74,11 @@ export function PackScreen() {
   };
 
   const resetToStore = () => {
+    if (wasFreePack.current) {
+      wasFreePack.current = false;
+      navigate('missions');
+      return;
+    }
     setPhase('store');
     setSelectedPack(null);
     setLastResult(null);
@@ -72,8 +89,8 @@ export function PackScreen() {
     focusRef.current = 0;
   };
 
-  const handleOpenPack = async (pack: PackTypeInfo) => {
-    if (isOpeningRef.current || (user?.coins ?? 0) < pack.cost) return;
+  const handleOpenPack = async (pack: PackTypeInfo, freePack = false) => {
+    if (isOpeningRef.current || (!freePack && (user?.coins ?? 0) < pack.cost)) return;
     isOpeningRef.current = true;
     skipOpeningRef.current = false;
     setSelectedPack(pack);
@@ -85,7 +102,7 @@ export function PackScreen() {
     await new Promise((r) => setTimeout(r, 300));
     if (skipOpeningRef.current) { isOpeningRef.current = false; return; }
 
-    const result = await openPack(pack.id);
+    const result = await openPack(pack.id, freePack);
     if (!result) {
       isOpeningRef.current = false;
       setPhase('store');
@@ -119,7 +136,10 @@ export function PackScreen() {
     setPhase('revealed');
   };
 
-  const getBestCard = (cards: { card: { rarity: string }; isNew: boolean }[]) => {
+  const getBestCard = (cards: {
+    card: { id: string; name: string; rarity: string; stats: { attack: number; defense: number; magic: number; luck: number; speed: number } };
+    isNew: boolean;
+  }[]) => {
     const order: Record<string, number> = { LEGENDARIO: 4, EPICO: 3, RARO: 2, COMUN: 1 };
     let best = cards[0];
     for (const c of cards) {
@@ -197,7 +217,7 @@ export function PackScreen() {
       if (action === 'CONFIRM') { resetToStore(); play('confirm'); return; }
       if (action === 'BACK') { resetToStore(); return; }
     }
-  }, [phase, back, user?.coins, packTypes, lastResult]);
+  }, [phase, back, navigate, user?.coins, packTypes, lastResult]);
 
   useInputManager(handleAction);
 
@@ -225,7 +245,6 @@ export function PackScreen() {
     gsap.fromTo(revealBtnRef.current, { scale: 1 }, { scale: 1.06, duration: 0.3, ease: 'power2.out', yoyo: true, repeat: -1 });
   }, [phase]);
 
-  const showCard = lastResult && phase === 'revealed' && !hypeRarity;
   const hypeIsLegendary = hypeRarity === 'LEGENDARIO';
   const bestCard = lastResult ? getBestCard(lastResult.cards) : null;
 

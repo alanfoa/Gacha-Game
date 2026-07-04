@@ -20,6 +20,18 @@ export function MissionsScreen() {
   const backBtnRef = useRef<HTMLButtonElement>(null);
   const [focus, setFocus] = useState(0);
   const focusIndexRef = useRef(0);
+  const claimingRef = useRef(false);
+
+  const handleClaimMission = async (missionId: string) => {
+    if (claimingRef.current) return;
+    claimingRef.current = true;
+    const freePack = await claimMission(missionId);
+    play('confirm');
+    claimingRef.current = false;
+    if (freePack) {
+      navigate('pack', { freePack: true });
+    }
+  };
 
   const availableMissions = missions.filter((m) => !m.claimed);
   const itemCount = availableMissions.length + 1; // cards + back button
@@ -52,8 +64,7 @@ export function MissionsScreen() {
       }
       const mission = availableMissions[focusIndexRef.current];
       if (mission && mission.completed && !mission.claimed) {
-        claimMission(mission.id);
-        play('confirm');
+        handleClaimMission(mission.id);
       }
       return;
     }
@@ -159,8 +170,7 @@ export function MissionsScreen() {
               }}
               onClick={() => {
                 if (mission.completed && !mission.claimed) {
-                  claimMission(mission.id);
-                  play('confirm');
+                  handleClaimMission(mission.id);
                 }
               }}
             >

@@ -36,6 +36,7 @@ export function BattleScreen() {
   const [showSkillSubmenu, setShowSkillSubmenu] = useState(false);
   const [skipAnim, setSkipAnim] = useState(false);
   const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
+  const [surrenderFocus, setSurrenderFocus] = useState(0);
   const [flashOpacity, setFlashOpacity] = useState(0);
   const [flashColor, setFlashColor] = useState('rgba(251,191,36,0.4)');
 
@@ -160,9 +161,19 @@ export function BattleScreen() {
     const elapsed = Date.now() - mountedAt.current;
     if (elapsed < 300) return;
     if (showSurrenderConfirm) {
+      if (action === 'NAV_LEFT' || action === 'NAV_UP') {
+        setSurrenderFocus(0);
+      }
+      if (action === 'NAV_RIGHT' || action === 'NAV_DOWN') {
+        setSurrenderFocus(1);
+      }
       if (action === 'CONFIRM') {
-        setShowSurrenderConfirm(false);
-        setPhase('result');
+        if (surrenderFocus === 0) {
+          setShowSurrenderConfirm(false);
+        } else {
+          setShowSurrenderConfirm(false);
+          setPhase('result');
+        }
       }
       if (action === 'BACK') {
         setShowSurrenderConfirm(false);
@@ -173,6 +184,7 @@ export function BattleScreen() {
     if (phaseRef.current === 'result') {
       if (action === 'CONFIRM' || action === 'BACK') {
         clearBattle();
+        BGM.switchToMenu();
         navigate('menu');
       }
       return;
@@ -197,7 +209,7 @@ export function BattleScreen() {
         setSelectedSkill(null);
         return;
       }
-      back();
+      setShowSurrenderConfirm(true);
       return;
     }
 
@@ -808,32 +820,36 @@ export function BattleScreen() {
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
               <button
                 onClick={() => setShowSurrenderConfirm(false)}
+                onMouseEnter={() => setSurrenderFocus(0)}
                 style={{
                   padding: '0.5rem 1.5rem',
-                  background: '#374151',
-                  border: '1px solid #6b7280',
+                  background: surrenderFocus === 0 ? 'rgba(96,165,250,0.15)' : '#374151',
+                  border: surrenderFocus === 0 ? '1.5px solid #60a5fa' : '1px solid #6b7280',
                   borderRadius: '4px',
-                  color: '#e5e7eb',
-                  fontWeight: 600,
+                  color: surrenderFocus === 0 ? '#60a5fa' : '#e5e7eb',
+                  fontWeight: 700,
                   fontSize: '0.8125rem',
                   cursor: 'pointer',
                   letterSpacing: '0.05em',
+                  transition: 'background 0.2s, border-color 0.2s, color 0.2s',
                 }}
               >
                 NO
               </button>
               <button
                 onClick={() => { clearBattle(); BGM.switchToMenu(); navigate('menu'); }}
+                onMouseEnter={() => setSurrenderFocus(1)}
                 style={{
                   padding: '0.5rem 1.5rem',
-                  background: '#991b1b',
-                  border: '1px solid #ef4444',
+                  background: surrenderFocus === 1 ? '#dc2626' : '#991b1b',
+                  border: surrenderFocus === 1 ? '1.5px solid #fca5a5' : '1px solid #ef4444',
                   borderRadius: '4px',
                   color: '#ffffff',
-                  fontWeight: 600,
+                  fontWeight: 700,
                   fontSize: '0.8125rem',
                   cursor: 'pointer',
                   letterSpacing: '0.05em',
+                  transition: 'background 0.2s, border-color 0.2s',
                 }}
               >
                 SÍ
@@ -1145,13 +1161,15 @@ function BattleResult({
         }}>
           {isVictory ? '¡VICTORIA!' : 'DERROTA'}
         </h2>
-        <div style={{ color: '#9ca3af', fontSize: '1rem', marginBottom: '1.5rem' }}>
-          {isVictory ? (
-            <span>Ganaste <strong style={{ color: '#fbbf24' }}>{coinsEarned}</strong> monedas</span>
-          ) : (
-            <span>Perdiste <strong style={{ color: '#ef4444' }}>{Math.abs(coinsEarned)}</strong> monedas</span>
-          )}
-        </div>
+        {coinsEarned !== 0 && (
+          <div style={{ color: '#9ca3af', fontSize: '1rem', marginBottom: '1.5rem' }}>
+            {isVictory ? (
+              <span>Ganaste <strong style={{ color: '#fbbf24' }}>{coinsEarned}</strong> monedas</span>
+            ) : (
+              <span>Perdiste <strong style={{ color: '#ef4444' }}>{Math.abs(coinsEarned)}</strong> monedas</span>
+            )}
+          </div>
+        )}
         <button
           onClick={onConfirm}
           style={{

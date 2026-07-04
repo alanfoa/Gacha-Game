@@ -12,6 +12,8 @@ export interface UserProfile {
   pityCount: number;
   totalPulls: number;
   legendaryCount: number;
+  playTime?: number;
+  lastPlayed?: string | null;
 }
 
 export interface CardData {
@@ -98,14 +100,6 @@ export interface PackTypeInfo {
   description: string;
 }
 
-interface PullResult {
-  card: CardData;
-  isNew: boolean;
-  coinsEarned: number;
-  pityActive: boolean;
-  user: UserProfile;
-}
-
 interface OpenPackResult {
   cards: { card: CardData; isNew: boolean }[];
   user: UserProfile;
@@ -139,11 +133,12 @@ interface GameState {
   fetchProfile: () => Promise<void>;
   fetchCards: () => Promise<void>;
   fetchPacks: () => Promise<void>;
-  openPack: (packType?: string) => Promise<OpenPackResult | null>;
+  openPack: (packType?: string, free?: boolean) => Promise<OpenPackResult | null>;
   importSave: (json: string) => boolean;
+  switchToken: (newToken: string | null) => void;
   logout: () => void;
   fetchMissions: () => Promise<void>;
-  claimMission: (missionId: string) => Promise<void>;
+  claimMission: (missionId: string) => Promise<boolean>;
 
   // Battle actions
   toggleSelectCard: (cardId: string) => void;
@@ -253,14 +248,14 @@ export const useGameStore = create<GameState>()(
         } catch { /* non-critical */ }
       },
 
-      openPack: async (packType = 'basico') => {
+      openPack: async (packType = 'basico', free = false) => {
         const { token } = get();
         if (!token) return null;
         set({ loading: true, error: null });
         try {
           const data = await api<OpenPackResult>('/open', token, {
             method: 'POST',
-            body: JSON.stringify({ packType }),
+            body: JSON.stringify({ packType, free }),
           });
           const cardIds = data.cards.map((c) => c.card.id);
           const newIds = data.cards.filter((c) => c.isNew).map((c) => c.card.id);
@@ -297,9 +292,9 @@ export const useGameStore = create<GameState>()(
         } catch { /* non-critical */ }
       },
 
-      claimMission: async (missionId: string) => {
+      claimMission: async (missionId: string): Promise<boolean> => {
         const { token } = get();
-        if (!token) return;
+        if (!token) return false;
         try {
           const data = await api<{
             claimed: boolean; rewardType: string; rewardAmount: number;
@@ -314,7 +309,12 @@ export const useGameStore = create<GameState>()(
               m.id === missionId ? { ...m, claimed: true } : m
             ),
           }));
-        } catch { /* ignore */ }
+          return data.freePack;
+        } catch { return false; }
+      },
+
+      switchToken: (newToken: string | null) => {
+        set({ token: newToken, user: null, inventory: [], unlockedCards: [], error: null });
       },
 
       logout: () => {
