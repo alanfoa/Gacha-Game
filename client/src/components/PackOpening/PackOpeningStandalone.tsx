@@ -216,9 +216,9 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
         </div>
       </div>
 
-      <div className="relative z-10 flex-1 overflow-auto p-6 pt-24 flex justify-center">
-        <div className="w-full max-w-4xl">
-          <div className="text-center">
+      <div className="relative z-10 flex-1 overflow-auto p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-7">
             <h1 className="font-black text-3xl text-white" style={{ fontFamily: "Rajdhani, sans-serif", letterSpacing: 5 }}>
               ELIGE TU{" "}
               <motion.span
@@ -230,8 +230,6 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
             </h1>
             <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, letterSpacing: 3, marginTop: 4 }}>NUEVOS PERSONAJES TE ESPERAN</p>
           </div>
-
-          <div className="h-16" />
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {packs.map((pack, i) => {
@@ -298,24 +296,24 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
                     transition={{ duration: 0.28 }}
                   />
 
-                  <div className="flex justify-center pt-6 pb-1">
-                    <PackEnvelope pack={pack} size="lg"/>
+                  <div className="flex justify-center pt-5 pb-0">
+                    <PackEnvelope pack={pack} size="md"/>
                   </div>
 
-                  <div className="px-5 pb-5">
-                    <div className="font-black text-center text-white" style={{ fontFamily: "Rajdhani, sans-serif", fontSize: 21, letterSpacing: 2 }}>
+                  <div className="px-4 pb-4">
+                    <div className="font-black text-center text-white" style={{ fontFamily: "Rajdhani, sans-serif", fontSize: 17, letterSpacing: 2 }}>
                       {pack.name}
                     </div>
-                    <div className="text-center font-bold mb-3" style={{ color: rar.color, fontSize: 12, letterSpacing: 1.5 }}>
+                    <div className="text-center font-bold mb-2.5" style={{ color: rar.color, fontSize: 10, letterSpacing: 1.5 }}>
                       {pack.count} {pack.count === 1 ? "CARTA" : "CARTAS"}
                     </div>
-                    <div className="text-center mb-3" style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, letterSpacing: 0.3 }}>
+                    <div className="text-center mb-3" style={{ color: "rgba(255,255,255,0.3)", fontSize: 9.5, letterSpacing: 0.3 }}>
                       {PACK_SUBTITLES[pack.id]}
                     </div>
                     <button
-                      className="w-full py-3 rounded-xl font-black text-white tracking-wider"
+                      className="w-full py-2.5 rounded-xl font-black text-white tracking-wider"
                       style={{
-                        fontFamily: "Rajdhani, sans-serif", letterSpacing: 2, fontSize: 16,
+                        fontFamily: "Rajdhani, sans-serif", letterSpacing: 2, fontSize: 13,
                         background: `linear-gradient(90deg, ${rar.color}88, ${rar.color}cc)`,
                         border: `1px solid ${rar.color}55`,
                         opacity: isActive ? 1 : 0.6,
@@ -331,27 +329,27 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
           </div>
 
           {/* Navigation dots + arrows */}
-          <div className="flex items-center justify-center gap-3 mt-8">
+          <div className="flex items-center justify-center gap-2.5 mt-6">
             <button onClick={() => navigate(-1)} disabled={activeIdx === 0}
               className="select-none transition-colors duration-150"
-              style={{ color: activeIdx===0 ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.52)", fontSize:28, background:"none", border:"none", cursor:activeIdx===0?"default":"pointer", padding:"0 6px", lineHeight:1, fontFamily:"sans-serif" }}>
+              style={{ color: activeIdx===0 ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.52)", fontSize:22, background:"none", border:"none", cursor:activeIdx===0?"default":"pointer", padding:"0 4px", lineHeight:1, fontFamily:"sans-serif" }}>
               ‹
             </button>
             {packs.map((_, i) => (
               <motion.div key={i} onClick={() => setActiveIdx(i)} className="cursor-pointer rounded-full"
-                style={{ height:7, background: i===activeIdx ? R[packs[activeIdx].rarity].color : "rgba(255,255,255,0.2)" }}
-                animate={{ width: i===activeIdx ? 32 : 7, opacity: i===activeIdx ? 1 : 0.5 }}
+                style={{ height:5, background: i===activeIdx ? R[packs[activeIdx].rarity].color : "rgba(255,255,255,0.2)" }}
+                animate={{ width: i===activeIdx ? 26 : 5, opacity: i===activeIdx ? 1 : 0.5 }}
                 transition={{ type:"spring", stiffness:420, damping:28 }}
               />
             ))}
             <button onClick={() => navigate(1)} disabled={activeIdx === packs.length - 1}
               className="select-none transition-colors duration-150"
-              style={{ color: activeIdx===packs.length-1 ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.52)", fontSize:28, background:"none", border:"none", cursor:activeIdx===packs.length-1?"default":"pointer", padding:"0 6px", lineHeight:1, fontFamily:"sans-serif" }}>
+              style={{ color: activeIdx===packs.length-1 ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.52)", fontSize:22, background:"none", border:"none", cursor:activeIdx===packs.length-1?"default":"pointer", padding:"0 4px", lineHeight:1, fontFamily:"sans-serif" }}>
               ›
             </button>
           </div>
 
-          <div className="text-center mt-4" style={{ color:"rgba(255,255,255,0.18)", fontSize:12, letterSpacing:3, fontFamily:"Rajdhani, sans-serif" }}>
+          <div className="text-center mt-3" style={{ color:"rgba(255,255,255,0.18)", fontSize:10, letterSpacing:3, fontFamily:"Rajdhani, sans-serif" }}>
             ← → NAVEGAR · ENTER CONFIRMAR
           </div>
         </div>

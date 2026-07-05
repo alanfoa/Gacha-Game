@@ -1,27 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700;900&display=swap');
-@import "tailwindcss";
-
-@theme {
-  --font-sans: 'Rajdhani', system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: var(--font-sans);
-  background: #0f0f1a;
-  color: #ffffff;
-  overflow: hidden;
-  height: 100vh;
-  width: 100vw;
-}
-
-#root {
-  height: 100vh;
-  width: 100vw;
-}
+@import './styles/fonts.css';
+@import './styles/tailwind.css';
+@import './styles/theme.css';

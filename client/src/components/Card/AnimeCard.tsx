@@ -206,13 +206,13 @@ export function AnimeCard({ card, onClick, dimmed, size = "md" }: {
           </div>
         )}
 
-        {/* Floating badges (top bar with dark bg) */}
-        <div className="absolute top-0 left-0 right-0 flex items-center justify-between" style={{ height: 26, background: "rgba(0,0,0,0.55)", zIndex: 10 }}>
+        {/* Floating badges (Figma style) */}
+        <div className="absolute top-2 left-2 right-2 flex justify-between items-start z-10">
           <div className="flex items-center gap-1 px-1.5 py-0.5 rounded" style={{ background: el.color + "22", border: `1px solid ${el.color}55` }}>
             <span style={{ fontSize: 9, color: el.color }}>{el.icon}</span>
             <span style={{ fontSize: 8, color: el.color, fontFamily: "Rajdhani, sans-serif", fontWeight: 700, letterSpacing: 0.5 }}>{el.label}</span>
           </div>
-          <div className="pl-1.5 pr-2.5 py-0.5 rounded" style={{ background: rar.dim + "cc" }}>
+          <div className="px-1.5 py-0.5 rounded" style={{ background: rar.dim + "cc" }}>
             <span style={{ fontSize: 7.5, color: rar.color, fontFamily: "Rajdhani, sans-serif", fontWeight: 800, letterSpacing: 0.5 }}>{rar.label}</span>
           </div>
         </div>

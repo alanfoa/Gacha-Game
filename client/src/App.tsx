@@ -135,7 +135,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div style={{ position: 'relative' }}>
+      <div>
         {/* Coins bar - hidden on public screens and battle */}
         {user && current !== 'battle' && current !== 'pack' && !publicScreens.includes(current) && (
           <div
