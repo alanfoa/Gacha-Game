@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { BGM, MENU_TRACKS } from '../../audio/sounds';
 
 const PLAYER_ACTIONS = ['prev', 'play', 'next', 'dropdown'] as const;
 
 export function MusicPlayer() {
+  const [visible, setVisible] = useState(false);
   const [trackName, setTrackName] = useState('Tema Principal');
   const [isPlaying, setIsPlaying] = useState(true);
   const [trackIndex, setTrackIndex] = useState(0);
@@ -71,10 +73,12 @@ export function MusicPlayer() {
       if (e.key === 'm' || e.key === 'M') {
         e.preventDefault();
         e.stopImmediatePropagation();
-        if (playerFocused) {
+        if (visible) {
+          setVisible(false);
           setPlayerFocused(false);
           setShowDropdown(false);
         } else {
+          setVisible(true);
           setPlayerFocused(true);
           setFocusIdx(0);
           focusIdxRef.current = 0;
@@ -82,11 +86,12 @@ export function MusicPlayer() {
         return;
       }
 
-      if (!focusedRef.current) return;
+      if (!visible || !focusedRef.current) return;
 
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' || e.key === 'b' || e.key === 'B') {
         e.preventDefault();
         e.stopImmediatePropagation();
+        setVisible(false);
         setPlayerFocused(false);
         setShowDropdown(false);
         return;
@@ -175,7 +180,7 @@ export function MusicPlayer() {
 
     document.addEventListener('keydown', handleKey, { capture: true });
     return () => document.removeEventListener('keydown', handleKey, { capture: true });
-  }, [playerFocused]);
+  }, [visible, playerFocused]);
 
   // Gamepad input
   useEffect(() => {
@@ -196,12 +201,14 @@ export function MusicPlayer() {
         const currentButtons = gp.buttons.map((b) => b.pressed);
         const currentFocused = focusedRef.current;
 
-        // Start button → toggle focus
+        // Start button → toggle visibility
         if (currentButtons[BTN_START] && !prevButtons[BTN_START]) {
           if (currentFocused) {
+            setVisible(false);
             setPlayerFocused(false);
             setShowDropdown(false);
           } else {
+            setVisible(true);
             setPlayerFocused(true);
             setFocusIdx(0);
             focusIdxRef.current = 0;
@@ -333,10 +340,18 @@ export function MusicPlayer() {
   return (
     <div style={{
       position: 'fixed',
-      bottom: '1rem',
+      bottom: 'calc(1rem + 10vh)',
       right: '1rem',
       zIndex: 9999,
     }}>
+      <AnimatePresence>
+        {visible && (
+      <motion.div
+        initial={{ opacity:0, y:16, scale:0.95 }}
+        animate={{ opacity:1, y:0, scale:1 }}
+        exit={{ opacity:0, y:16, scale:0.95 }}
+        transition={{ type:'spring', stiffness:350, damping:28 }}
+      >
       {/* Main bar */}
       <div style={{
         width: '210px',
@@ -497,6 +512,8 @@ export function MusicPlayer() {
             </div>
           ))}
         </div>
+      )}
+      </motion.div>
       )}
     </div>
   );
