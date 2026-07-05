@@ -5,7 +5,6 @@ import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
 import { AnimeCard, type Card, type Rarity, type El } from '../Card/AnimeCard';
 import { CardModal } from '../UI/CardModal';
-import { WalletWidget } from '../UI/WalletWidget';
 
 const CARD_W = 114;
 
@@ -99,7 +98,6 @@ export function AlbumScreen() {
         position: 'relative',
       }}
     >
-      <WalletWidget />
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
         <button
@@ -138,7 +136,14 @@ export function AlbumScreen() {
           border: '1px solid rgba(255,255,255,0.08)',
         }}
       >
-        <Stat label="Monedas" value={`¥ ${user?.coins?.toLocaleString() ?? '0'}`} />
+        <div style={{ background:'white', border:'2.5px solid #111', padding:'6px 14px 6px 10px', minWidth:'120px' }}>
+          <div style={{ fontFamily:"'Barlow Condensed', sans-serif", fontSize:'1.35rem', fontWeight:700, color:'#0A0A0A', lineHeight:1.1, letterSpacing:'0.01em' }}>
+            ¥ {user?.coins?.toLocaleString() ?? '0'}
+          </div>
+          <div style={{ fontSize:'0.55rem', color:'#555', marginTop:'1px', letterSpacing:'0.07em' }}>
+            current wallet
+          </div>
+        </div>
         <Stat label="Sobres abiertos" value={`📦 ${user?.totalPulls ?? 0}`} />
         <Stat label="Legendarios" value={`💎 ${user?.legendaryCount ?? 0}`} />
         <Stat label="Pity" value={`😤 ${user?.pityCount ?? 0}/50`} />

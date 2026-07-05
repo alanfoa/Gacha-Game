@@ -5,7 +5,6 @@ import { useGameStore } from '../../store/gameStore';
 import { useSaveSlotsStore, type SlotData } from '../../store/saveSlotsStore';
 import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
-import { WalletWidget } from '../UI/WalletWidget';
 
 function formatDate(d: string | null): string {
   if (!d) return '—';
@@ -101,7 +100,7 @@ export function SaveSlotsScreen() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [focus]);
 
-  const getSlotContent = (slot: SlotData) => {
+  const getSlotContent = (slot: SlotData, isOccupied: boolean, i: number) => {
     if (slot.token && slot.name) {
       return (
         <>
@@ -109,9 +108,33 @@ export function SaveSlotsScreen() {
             <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#ffffff', letterSpacing: '0.02em' }}>
               {slot.name}
             </span>
-            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#facc15' }}>
-              ¥ {slot.coins.toLocaleString()}
-            </span>
+            <div style={{ display:'flex', alignItems:'center', gap:'0.5rem' }}>
+              <div style={{ background:'white', border:'2px solid #111', padding:'3px 10px 3px 8px' }}>
+                <div style={{ fontFamily:"'Barlow Condensed', sans-serif", fontSize:'0.95rem', fontWeight:700, color:'#0A0A0A', lineHeight:1.2, letterSpacing:'0.01em' }}>
+                  ¥ {slot.coins.toLocaleString()}
+                </div>
+                <div style={{ fontSize:'0.5rem', color:'#555', marginTop:'1px', letterSpacing:'0.06em' }}>
+                  current wallet
+                </div>
+              </div>
+              {isOccupied && (
+                <>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); switchToken(slot.token); activateSlot(i); navigate('menu'); }}
+                    style={{ background:'rgba(96,165,250,0.15)', border:'1px solid rgba(96,165,250,0.3)', color:'#60a5fa', padding:'0.3rem 0.8rem', borderRadius:'3px', cursor:'pointer', fontWeight:700, fontSize:'0.75rem' }}
+                  >
+                    CARGAR
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setConfirmDelete(i); }}
+                    title="Borrar ranura"
+                    style={{ background:'rgba(220,38,38,0.1)', border:'1px solid rgba(220,38,38,0.2)', color:'#fca5a5', padding:'0.3rem 0.8rem', borderRadius:'3px', cursor:'pointer', fontWeight:700, fontSize:'0.75rem' }}
+                  >
+                    BORRAR
+                  </button>
+                </>
+              )}
+            </div>
           </div>
           <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.8rem', color: '#9ca3af' }}>
             <span>🃏 {slot.cardCount} cartas</span>
@@ -143,7 +166,6 @@ export function SaveSlotsScreen() {
         position: 'relative',
       }}
     >
-      <WalletWidget />
       {/* Header */}
       <div style={{
         padding: '1.5rem 2rem 0.5rem',
@@ -299,53 +321,11 @@ export function SaveSlotsScreen() {
                   <div style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 600, marginBottom: '0.2rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                     RANURA {i + 1}
                   </div>
-                  {getSlotContent(slot)}
+                  {getSlotContent(slot, isOccupied, i)}
                 </div>
               </div>
 
-              {isOccupied && (
-                <div style={{ display: 'flex', gap: '0.3rem', flexShrink: 0, marginTop: '0.2rem' }}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      switchToken(slot.token);
-                      activateSlot(i);
-                      navigate('menu');
-                    }}
-                    style={{
-                      background: 'rgba(96,165,250,0.15)',
-                      border: '1px solid rgba(96,165,250,0.3)',
-                      color: '#60a5fa',
-                      padding: '0.3rem 0.8rem',
-                      borderRadius: '3px',
-                      cursor: 'pointer',
-                      fontWeight: 700,
-                      fontSize: '0.75rem',
-                    }}
-                  >
-                    CARGAR
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setConfirmDelete(i);
-                    }}
-                    title="Borrar ranura"
-                    style={{
-                      background: 'rgba(220,38,38,0.1)',
-                      border: '1px solid rgba(220,38,38,0.2)',
-                      color: '#fca5a5',
-                      padding: '0.3rem 0.8rem',
-                      borderRadius: '3px',
-                      cursor: 'pointer',
-                      fontWeight: 700,
-                      fontSize: '0.75rem',
-                    }}
-                  >
-                    BORRAR
-                  </button>
-                </div>
-              )}
+              
             </div>
           );
         })}
