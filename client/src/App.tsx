@@ -137,23 +137,6 @@ function App() {
     <ErrorBoundary>
       <div>
         {/* Coins bar - hidden on public screens and battle */}
-        {user && current !== 'battle' && current !== 'pack' && !publicScreens.includes(current) && (
-          <div
-            style={{
-              position: 'fixed', top: '1rem', right: '1.5rem',
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-              color: '#facc15',
-              fontSize: '1.3rem',
-              fontWeight: 900,
-              zIndex: 9000,
-              textShadow: '0 0 12px rgba(250,204,21,0.6)',
-              pointerEvents: 'none',
-            }}
-          >
-            🪙 {user?.coins ?? 0}
-          </div>
-        )}
-
         <div
           ref={curtainRef}
           style={{

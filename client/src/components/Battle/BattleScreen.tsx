@@ -6,6 +6,7 @@ import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
 import { BGM } from '../../audio/sounds';
 import { AnimeCard, type Card, type Rarity, type El } from '../Card/AnimeCard';
+import { WalletWidget } from '../UI/WalletWidget';
 
 type Phase = 'player_turn' | 'resolving' | 'result';
 
@@ -526,6 +527,7 @@ export function BattleScreen() {
         overflow: 'hidden',
       }}
     >
+      <WalletWidget />
       <style>{`
         @keyframes battleGlowPulse {
           0%, 100% { filter: brightness(1); }

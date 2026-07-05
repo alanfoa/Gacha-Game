@@ -5,6 +5,7 @@ import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
 import { AnimeCard, type Card, type Rarity, type El } from '../Card/AnimeCard';
 import { CardModal } from '../UI/CardModal';
+import { WalletWidget } from '../UI/WalletWidget';
 
 const CARD_W = 114;
 
@@ -95,8 +96,10 @@ export function AlbumScreen() {
         background: '#011367',
         padding: '2rem',
         overflow: 'auto',
+        position: 'relative',
       }}
     >
+      <WalletWidget />
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
         <button
@@ -135,7 +138,7 @@ export function AlbumScreen() {
           border: '1px solid rgba(255,255,255,0.08)',
         }}
       >
-        <Stat label="Monedas" value={`🪙 ${user?.coins ?? 0}`} />
+        <Stat label="Monedas" value={`¥ ${user?.coins?.toLocaleString() ?? '0'}`} />
         <Stat label="Sobres abiertos" value={`📦 ${user?.totalPulls ?? 0}`} />
         <Stat label="Legendarios" value={`💎 ${user?.legendaryCount ?? 0}`} />
         <Stat label="Pity" value={`😤 ${user?.pityCount ?? 0}/50`} />

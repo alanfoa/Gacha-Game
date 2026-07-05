@@ -4,6 +4,7 @@ import { useGameStore } from '../../store/gameStore';
 import { useScreenStore } from '../../store/screenStore';
 import { useInputManager } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
+import { WalletWidget } from '../UI/WalletWidget';
 
 const missionBgColors: Record<string, string> = {
   win_battles: 'linear-gradient(135deg, #1e3a5f, #0f1f3a)',
@@ -118,8 +119,10 @@ export function MissionsScreen() {
         fontFamily: 'system-ui, sans-serif',
         padding: '2rem',
         gap: '2rem',
+        position: 'relative',
       }}
     >
+      <WalletWidget />
       <h1
         style={{
           fontSize: '2.8rem',
@@ -246,7 +249,7 @@ export function MissionsScreen() {
               </div>
 
               <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#facc15', fontWeight: 600 }}>
-                {mission.reward === 1 ? '🎁 Sobre gratis' : `🪙 +${mission.reward} monedas`}
+                {mission.reward === 1 ? '🎁 Sobre gratis' : `¥ +${mission.reward.toLocaleString()}`}
               </div>
             </div>
           );

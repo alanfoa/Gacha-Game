@@ -5,6 +5,7 @@ import { useGameStore } from '../../store/gameStore';
 import { useSaveSlotsStore, type SlotData } from '../../store/saveSlotsStore';
 import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
+import { WalletWidget } from '../UI/WalletWidget';
 
 function formatDate(d: string | null): string {
   if (!d) return '—';
@@ -109,7 +110,7 @@ export function SaveSlotsScreen() {
               {slot.name}
             </span>
             <span style={{ fontSize: '1rem', fontWeight: 700, color: '#facc15' }}>
-              🪙 {slot.coins.toLocaleString()}
+              ¥ {slot.coins.toLocaleString()}
             </span>
           </div>
           <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.8rem', color: '#9ca3af' }}>
@@ -142,6 +143,7 @@ export function SaveSlotsScreen() {
         position: 'relative',
       }}
     >
+      <WalletWidget />
       {/* Header */}
       <div style={{
         padding: '1.5rem 2rem 0.5rem',
