@@ -130,9 +130,11 @@ function PackEnvelope({ pack, size = "md" }: { pack: Pack; size?: "sm" | "md" | 
 
 // ─── Screens ─────────────────────────────────────────────────────────────────
 
-function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; onSelect: (p: Pack) => void }) {
+function ShopScreen({ packs, coins, onSelect, onBack }: { packs: Pack[]; coins: number; onSelect: (p: Pack) => void; onBack: () => void }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const activeIdxRef = useRef(0);
+  const [backFocused, setBackFocused] = useState(false);
+  const backFocusedRef = useRef(false);
   const activePack   = packs[activeIdx];
   const activeRar    = R[activePack.rarity];
   const mountedAt = useRef(Date.now());
@@ -145,8 +147,21 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
   };
 
   useEffect(() => { activeIdxRef.current = activeIdx; }, [activeIdx]);
+  useEffect(() => { backFocusedRef.current = backFocused; }, [backFocused]);
 
   const navigate = useCallback((delta: -1 | 1) => {
+    if (backFocusedRef.current && delta === 1) {
+      setBackFocused(false);
+      setActiveIdx(0);
+      activeIdxRef.current = 0;
+      SFX.navigate();
+      return;
+    }
+    if (!backFocusedRef.current && activeIdxRef.current === 0 && delta === -1) {
+      setBackFocused(true);
+      SFX.navigate();
+      return;
+    }
     setActiveIdx(prev => {
       const next = prev + delta;
       if (next < 0 || next >= packs.length) return prev;
@@ -154,6 +169,16 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
       return next;
     });
   }, [packs.length]);
+
+  const confirm = useCallback(() => {
+    if (backFocusedRef.current) {
+      SFX.navigate();
+      onBack();
+    } else {
+      SFX.packSelect();
+      onSelect(packs[activeIdxRef.current]);
+    }
+  }, [onBack, onSelect]);
 
   // ── Keyboard ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -163,11 +188,11 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
       if (["ArrowLeft","ArrowRight","Enter"," "].includes(e.key)) e.preventDefault();
       if (e.key === "ArrowLeft"  || e.key === "a") navigate(-1);
       if (e.key === "ArrowRight" || e.key === "d") navigate(1);
-      if (e.key === "Enter" || e.key === " ") { SFX.packSelect(); onSelect(packs[activeIdxRef.current]); }
+      if (e.key === "Enter" || e.key === " ") { confirm(); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [navigate, onSelect]);
+  }, [navigate, confirm]);
 
   // ── Gamepad ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -187,14 +212,14 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
           lastMoveAt = t;
         }
         const aPressed = gp.buttons[0]?.pressed;
-        if (aPressed && !prevA) { SFX.packSelect(); onSelect(packs[activeIdxRef.current]); }
+        if (aPressed && !prevA) { confirm(); }
         prevA = aPressed;
       }
       rafId = requestAnimationFrame(poll);
     };
     rafId = requestAnimationFrame(poll);
     return () => cancelAnimationFrame(rafId);
-  }, [navigate, onSelect]);
+  }, [navigate, confirm]);
 
   return (
     <div className="w-full h-screen flex flex-col overflow-hidden" style={{ background: "#011367" }}>
@@ -212,11 +237,11 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
       {/* Header */}
       <div className="relative z-10 flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ borderBottom: "1px solid rgba(124,58,237,0.18)" }}>
         <div>
-          <div className="font-black text-2xl" style={{ fontFamily: "Rajdhani, sans-serif", color: "#fff", letterSpacing: 4 }}>
-            FATE<span style={{ color: "#7c3aed" }}>·PROTOCOL</span>
+            <div className="font-black text-2xl" style={{ fontFamily: "Rajdhani, sans-serif", color: "#fff", letterSpacing: 4 }}>
+              FATE<span style={{ color: "#7c3aed" }}>·PROTOCOL</span>
+            </div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", letterSpacing: 4, fontFamily: "Rajdhani, sans-serif" }}>TIENDA DE SOBRES</div>
           </div>
-          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", letterSpacing: 4, fontFamily: "Rajdhani, sans-serif" }}>TIENDA DE SOBRES</div>
-        </div>
         <div
           style={{
             background: 'white',
@@ -248,6 +273,30 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
             current wallet
           </div>
         </div>
+      </div>
+
+      {/* Back button below navbar */}
+      <div className="relative z-10 px-6 pt-2 pb-0 flex-shrink-0">
+        <button
+          onClick={() => { SFX.navigate(); onBack(); }}
+          style={{
+            background: backFocused ? 'rgba(255,255,255,0.1)' : 'transparent',
+            border: `1px solid ${backFocused ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)'}`,
+            color: backFocused ? '#fff' : 'rgba(255,255,255,0.7)',
+            borderRadius: 4,
+            padding: '4px 10px',
+            cursor: 'pointer',
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={(e) => { setBackFocused(true); e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)'; e.currentTarget.style.color = '#fff'; }}
+          onMouseLeave={(e) => { setBackFocused(false); e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+        >
+          ← VOLVER
+        </button>
       </div>
 
       <div className="relative z-10 flex-1 overflow-auto p-6">
@@ -1230,7 +1279,7 @@ export function PackOpeningStandalone() {
       <AnimatePresence mode="wait">
         {screen === "shop" && (
           <motion.div key="shop" className="w-full h-full" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} transition={{ duration:0.25 }}>
-            <ShopScreen packs={packs} coins={coins} onSelect={(p) => goSelect(p)}/>
+            <ShopScreen packs={packs} coins={coins} onSelect={(p) => goSelect(p)} onBack={() => { SFX.navigate(); navigate('menu'); }}/>
           </motion.div>
         )}
         {screen === "anticipation" && pack && (
