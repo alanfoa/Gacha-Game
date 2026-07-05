@@ -574,7 +574,8 @@ function ResultsScreen({ pack, cards, onCardClick, onShop }: {
   useEffect(() => {
     if (!allOut) return;
     const onKey = (e: KeyboardEvent) => {
-      if (["ArrowLeft","ArrowRight","ArrowDown","ArrowUp","Enter"," "].includes(e.key)) e.preventDefault();
+      if (["ArrowLeft","ArrowRight","ArrowDown","ArrowUp","Enter"," ","Escape","b","B"].includes(e.key)) e.preventDefault();
+      if (e.key === "Escape" || e.key === "b" || e.key === "B") { SFX.navigate(); onShop(); return; }
       if (focusArea === "cards") {
         if (e.key === "ArrowLeft"  || e.key === "a") { navigate(-1); return; }
         if (e.key === "ArrowRight" || e.key === "d") { navigate(1); return; }
@@ -592,8 +593,7 @@ function ResultsScreen({ pack, cards, onCardClick, onShop }: {
         if (e.key === "ArrowUp") { setFocusArea("cards"); SFX.navigate(); return; }
         if (e.key === "Enter" || e.key === " ") {
           SFX.cardDetail();
-          if (focusArea === "shop") onShop();
-          else { onShop(); }
+          onShop();
           return;
         }
       }
@@ -624,7 +624,7 @@ function ResultsScreen({ pack, cards, onCardClick, onShop }: {
           if (focusArea === "cards") onCardClick(cards[activeIdxRef.current]);
           else onShop();
         }
-        if (gp.buttons[1]?.pressed && focusArea !== "cards") setFocusArea("cards");
+        if (gp.buttons[1]?.pressed) { SFX.navigate(); onShop(); return; }
       }
       rafId = requestAnimationFrame(poll);
     };
@@ -787,6 +787,31 @@ function DetailScreen({ card, onBack }: { card: Card; onBack: () => void }) {
   const el = E[card.element];
 
   useEffect(() => { SFX.cardDetail(); }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (["Escape", "Enter", "b", "B"].includes(e.key)) {
+        e.preventDefault();
+        onBack();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onBack]);
+
+  useEffect(() => {
+    let rafId: number;
+    const poll = () => {
+      const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+      for (const gp of gps) {
+        if (!gp) continue;
+        if (gp.buttons[0]?.pressed) { onBack(); }
+      }
+      rafId = requestAnimationFrame(poll);
+    };
+    rafId = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(rafId);
+  }, [onBack]);
   const stats = [
     { label:"ATK", value:card.atk, color:"#f87171" },
     { label:"DEF", value:card.def, color:"#60a5fa" },
