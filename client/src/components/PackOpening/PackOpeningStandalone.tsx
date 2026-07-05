@@ -1017,6 +1017,30 @@ export function PackOpeningStandalone() {
     setScreen("shop");
   }, [navigate]);
 
+  useEffect(() => {
+    if (screen !== "shop") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" || e.key === "b" || e.key === "B") { e.preventDefault(); SFX.navigate(); navigate('menu'); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [screen, navigate]);
+
+  useEffect(() => {
+    if (screen !== "shop") return;
+    let rafId: number;
+    const poll = () => {
+      const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+      for (const gp of gps) {
+        if (!gp) continue;
+        if (gp.buttons[1]?.pressed) { SFX.navigate(); navigate('menu'); }
+      }
+      rafId = requestAnimationFrame(poll);
+    };
+    rafId = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(rafId);
+  }, [screen, navigate]);
+
   const isFree = useRef(!!screenParams?.freePack);
 
   if (packs.length === 0 || storeLoading) {
