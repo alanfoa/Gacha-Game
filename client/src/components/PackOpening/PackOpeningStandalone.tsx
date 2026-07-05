@@ -190,7 +190,7 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
   }, [navigate, onSelect]);
 
   return (
-    <div className="w-full h-screen flex flex-col overflow-hidden" style={{ background: "linear-gradient(158deg, #06060f 0%, #0c0720 100%)" }}>
+    <div className="w-full h-screen flex flex-col overflow-hidden" style={{ background: "#011367" }}>
 
       {/* Ambient glow — color shifts with the focused pack's rarity */}
       <motion.div
@@ -429,7 +429,7 @@ function AnticipationScreen({ pack, onOpen }: { pack: Pack; onOpen: () => void }
 
   return (
     <div className="w-full h-screen flex flex-col items-center justify-center relative overflow-hidden"
-      style={{ background: "#04040d" }}>
+      style={{ background: "#011367" }}>
 
       <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at center, ${rar.color}09 0%, transparent 55%)` }}/>
 
@@ -524,7 +524,7 @@ function OpeningScreen({ pack, onDone }: { pack: Pack; onDone: () => void }) {
   });
 
   return (
-    <div className="w-full h-screen flex items-center justify-center relative overflow-hidden" style={{ background: "#04040d" }}>
+    <div className="w-full h-screen flex items-center justify-center relative overflow-hidden" style={{ background: "#011367" }}>
       <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(circle at 50% 50%, ${rar.color}18 0%, transparent 55%)` }}/>
 
       <AnimatePresence>
@@ -703,7 +703,7 @@ function ResultsScreen({ pack, cards, onCardClick, onShop, isFree }: {
   }, [allOut, navigate, onCardClick, cards, focusArea, onShop]);
 
   return (
-    <div className="w-full h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ background:"linear-gradient(158deg, #05050e 0%, #0b0620 100%)" }}>
+    <div className="w-full h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ background:"#011367" }}>
       <div className="absolute inset-0 pointer-events-none" style={{ background:`radial-gradient(circle at 50% 40%, ${rar.color}0c 0%, transparent 60%)` }}/>
 
       {/* Header */}
@@ -894,7 +894,7 @@ function DetailScreen({ card, onBack }: { card: Card; onBack: () => void }) {
   const power = stats.reduce((s, x) => s + x.value, 0);
 
   return (
-    <div className="w-full h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ background:"#03030c" }}>
+    <div className="w-full h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ background:"#011367" }}>
       <div className="absolute inset-0 opacity-[0.07] scale-125 pointer-events-none">
         <ElementArtwork el={card.element} uid={bgUid}/>
       </div>
