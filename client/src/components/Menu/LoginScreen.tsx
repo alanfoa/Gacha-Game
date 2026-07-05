@@ -62,10 +62,10 @@ export function LoginScreen() {
         }}
       />
       <h1 style={{ fontSize: '4rem', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '0.5rem', transform: 'skewX(-10deg)', color: '#ffffff', textShadow: '0 0 30px rgba(96,165,250,0.15)' }}>
-        GACHA
+        FATE
       </h1>
       <h1 style={{ fontSize: '4rem', fontWeight: 900, letterSpacing: '-0.05em', marginBottom: '2rem', transform: 'skewX(-10deg)', color: '#60a5fa', textShadow: '0 0 30px rgba(96,165,250,0.3)' }}>
-        PERSONA
+        PROTOCOL
       </h1>
       <p style={{ marginBottom: '2rem', color: '#9ca3af', fontSize: '0.875rem', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
         {slotIndex !== null ? `REGISTRAR EN RANURA ${slotIndex + 1}` : 'Ingresa tu nombre para comenzar'}

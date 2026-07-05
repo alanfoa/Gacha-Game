@@ -87,7 +87,7 @@ export function OptionsScreen() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `gacha-persona-save-${user?.name ?? 'unknown'}.json`;
+    a.download = `fate-protocol-save-${user?.name ?? 'unknown'}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

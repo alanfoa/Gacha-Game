@@ -106,7 +106,7 @@ function PackEnvelope({ pack, size = "md" }: { pack: Pack; size?: "sm" | "md" | 
         padding: sz.f * 1.1,
       }}>
         <div className="flex flex-col items-center gap-0.5 w-full">
-          <div style={{ fontFamily: "Rajdhani, sans-serif", color: rar.color, fontSize: sz.f - 1, fontWeight: 800, letterSpacing: 1.5 }}>ANIME·CLASH</div>
+          <div style={{ fontFamily: "Rajdhani, sans-serif", color: rar.color, fontSize: sz.f - 1, fontWeight: 800, letterSpacing: 1.5 }}>FATE·PROTOCOL</div>
           <div style={{ width: "100%", height: 1, background: `linear-gradient(90deg, transparent, ${rar.color}55, transparent)` }}/>
         </div>
 
@@ -135,6 +135,7 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
   const activeIdxRef = useRef(0);
   const activePack   = packs[activeIdx];
   const activeRar    = R[activePack.rarity];
+  const mountedAt = useRef(Date.now());
 
   const PACK_SUBTITLES: Record<string, string> = {
     basico:     "Una carta del pool completo",
@@ -157,6 +158,8 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
   // ── Keyboard ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (Date.now() - mountedAt.current < 350) return;
+      if (e.repeat) return;
       if (["ArrowLeft","ArrowRight","Enter"," "].includes(e.key)) e.preventDefault();
       if (e.key === "ArrowLeft"  || e.key === "a") navigate(-1);
       if (e.key === "ArrowRight" || e.key === "d") navigate(1);
@@ -170,8 +173,10 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
   useEffect(() => {
     let rafId: number;
     let lastMoveAt = 0;
+    let prevA = false;
     const COOLDOWN = 220;
     const poll = (t: number) => {
+      if (Date.now() - mountedAt.current < 350) { rafId = requestAnimationFrame(poll); return; }
       const gps = navigator.getGamepads ? navigator.getGamepads() : [];
       for (const gp of gps) {
         if (!gp) continue;
@@ -181,7 +186,9 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
           navigate(left ? -1 : 1);
           lastMoveAt = t;
         }
-        if (gp.buttons[0]?.pressed) { SFX.packSelect(); onSelect(packs[activeIdxRef.current]); }
+        const aPressed = gp.buttons[0]?.pressed;
+        if (aPressed && !prevA) { SFX.packSelect(); onSelect(packs[activeIdxRef.current]); }
+        prevA = aPressed;
       }
       rafId = requestAnimationFrame(poll);
     };
@@ -206,7 +213,7 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
       <div className="relative z-10 flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ borderBottom: "1px solid rgba(124,58,237,0.18)" }}>
         <div>
           <div className="font-black text-2xl" style={{ fontFamily: "Rajdhani, sans-serif", color: "#fff", letterSpacing: 4 }}>
-            ANIME<span style={{ color: "#7c3aed" }}>·CLASH</span>
+            FATE<span style={{ color: "#7c3aed" }}>·PROTOCOL</span>
           </div>
           <div style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", letterSpacing: 4, fontFamily: "Rajdhani, sans-serif" }}>TIENDA DE SOBRES</div>
         </div>

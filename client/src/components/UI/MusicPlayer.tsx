@@ -88,7 +88,15 @@ export function MusicPlayer() {
 
       if (!visible || !focusedRef.current) return;
 
-      if (e.key === 'Escape' || e.key === 'b' || e.key === 'B') {
+      if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        BGM.nextTrack();
+        setShowDropdown(false);
+        return;
+      }
+
+      if (e.key === 'Escape') {
         e.preventDefault();
         e.stopImmediatePropagation();
         setVisible(false);
@@ -213,6 +221,16 @@ export function MusicPlayer() {
             setFocusIdx(0);
             focusIdxRef.current = 0;
           }
+          prevButtons = currentButtons;
+          raf = requestAnimationFrame(poll);
+          return;
+        }
+
+        // BACK button (B) → next track (always, even when hidden)
+        const BTN_BACK = 1;
+        if (currentButtons[BTN_BACK] && !prevButtons[BTN_BACK]) {
+          BGM.nextTrack();
+          setShowDropdown(false);
           prevButtons = currentButtons;
           raf = requestAnimationFrame(poll);
           return;
@@ -515,6 +533,7 @@ export function MusicPlayer() {
       )}
       </motion.div>
       )}
+    </AnimatePresence>
     </div>
   );
 }

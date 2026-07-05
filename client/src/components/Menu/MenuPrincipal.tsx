@@ -137,7 +137,7 @@ export function MenuPrincipal() {
           margin: 0,
           lineHeight: 1.1,
         }}>
-          GACHA
+          FATE
         </h1>
         <h1 style={{
           fontSize: '5rem',
@@ -149,7 +149,7 @@ export function MenuPrincipal() {
           margin: 0,
           lineHeight: 1.1,
         }}>
-          PERSONA
+          PROTOCOL
         </h1>
       </div>
 
