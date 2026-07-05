@@ -23,7 +23,7 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return this.props.fallback ?? (
-        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f0f1a', color: '#ef4444', padding: '2rem', textAlign: 'center' }}>
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#011367', color: '#ef4444', padding: '2rem', textAlign: 'center' }}>
           <h2 style={{ marginBottom: '1rem' }}>Algo salió mal</h2>
           <button
             onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}

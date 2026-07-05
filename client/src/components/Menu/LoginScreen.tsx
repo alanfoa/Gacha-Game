@@ -44,7 +44,7 @@ export function LoginScreen() {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#0f0f1a',
+      background: '#011367',
       color: 'white',
       position: 'relative',
       overflow: 'hidden',

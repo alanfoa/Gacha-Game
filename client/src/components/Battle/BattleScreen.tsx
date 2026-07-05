@@ -507,7 +507,7 @@ export function BattleScreen() {
 
   if (playerBattleCards.length === 0) {
     return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f1a', color: '#9ca3af' }}>
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#011367', color: '#9ca3af' }}>
         <p>No hay batalla activa. Selecciona un equipo primero.</p>
       </div>
     );
@@ -521,7 +521,7 @@ export function BattleScreen() {
         width: '100vw',
         display: 'flex',
         flexDirection: 'column',
-        background: '#0f0f1a',
+        background: '#011367',
         position: 'relative',
         overflow: 'hidden',
       }}

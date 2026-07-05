@@ -113,7 +113,7 @@ export function MissionsScreen() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0f0f1a',
+        background: '#011367',
         color: 'white',
         fontFamily: 'system-ui, sans-serif',
         padding: '2rem',

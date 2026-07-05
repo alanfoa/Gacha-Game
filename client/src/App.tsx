@@ -74,7 +74,7 @@ function App() {
   if (needsAuth && !user) {
     if (error) {
       return (
-        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', background: '#0f0f1a', color: '#9ca3af' }}>
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', background: '#011367', color: '#9ca3af' }}>
           <p style={{ color: '#ef4444' }}>{error}</p>
           <button
             onClick={fetchProfile}
@@ -123,7 +123,7 @@ function App() {
       }
     } catch {
       return (
-        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0f0f1a', color: '#ef4444' }}>
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#011367', color: '#ef4444' }}>
           <p>Error al cargar la pantalla</p>
           <button onClick={() => window.location.reload()} style={{ marginTop: '1rem', padding: '0.75rem 2rem', background: 'transparent', border: '1px solid #60a5fa', color: '#60a5fa', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>
             REINTENTAR
@@ -158,7 +158,7 @@ function App() {
           ref={curtainRef}
           style={{
             position: 'fixed', inset: 0, zIndex: 9999,
-            background: '#0f0f1a',
+            background: '#011367',
             pointerEvents: transitioning ? 'auto' : 'none',
             clipPath: 'polygon(100% 0, 100% 0, 100% 100%, 100% 100%)',
           }}

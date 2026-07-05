@@ -210,9 +210,36 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
           </div>
           <div style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", letterSpacing: 4, fontFamily: "Rajdhani, sans-serif" }}>TIENDA DE SOBRES</div>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.22)" }}>
-          <span className="text-lg">🪙</span>
-          <span className="font-black text-xl" style={{ fontFamily: "Rajdhani, sans-serif", color: "#f59e0b" }}>{coins.toLocaleString()}</span>
+        <div
+          style={{
+            background: 'white',
+            border: '2.5px solid #111',
+            padding: '8px 18px 8px 14px',
+            minWidth: '148px',
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: '1.65rem',
+              fontWeight: 700,
+              color: '#0A0A0A',
+              lineHeight: 1.1,
+              letterSpacing: '0.01em',
+            }}
+          >
+            ¥ {coins.toLocaleString()}
+          </div>
+          <div
+            style={{
+              fontSize: '0.62rem',
+              color: '#555',
+              marginTop: '2px',
+              letterSpacing: '0.08em',
+            }}
+          >
+            current wallet
+          </div>
         </div>
       </div>
 
@@ -320,7 +347,7 @@ function ShopScreen({ packs, coins, onSelect }: { packs: Pack[]; coins: number; 
                         transition: "opacity 0.28s ease",
                       }}
                     >
-                      🪙 {pack.price.toLocaleString()}
+                      ¥ {pack.price.toLocaleString()}
                     </button>
                   </div>
                 </motion.div>
@@ -448,7 +475,7 @@ function AnticipationScreen({ pack, onOpen }: { pack: Pack; onOpen: () => void }
 
       <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center, transparent 36%, rgba(0,0,0,0.84) 100%)" }}/>
       <div className="absolute bottom-7 text-center" style={{ color: "rgba(255,255,255,0.22)", fontSize: 10, fontFamily: "Rajdhani, sans-serif", letterSpacing: 3 }}>
-        SOBRE {pack.name} · {pack.count} {pack.count === 1 ? "CARTA" : "CARTAS"} · 🪙 {pack.price}
+        SOBRE {pack.name} · {pack.count} {pack.count === 1 ? "CARTA" : "CARTAS"} · ¥ {pack.price}
       </div>
     </div>
   );
@@ -1047,7 +1074,7 @@ export function PackOpeningStandalone() {
 
   if (packs.length === 0 || storeLoading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center" style={{ background: "#0f0f1a", color: "#9ca3af" }}>
+      <div className="w-full h-screen flex items-center justify-center" style={{ background: "#011367", color: "#9ca3af" }}>
         Cargando tienda...
       </div>
     );

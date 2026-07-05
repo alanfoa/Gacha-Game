@@ -92,7 +92,7 @@ export function AlbumScreen() {
         width: '100vw',
         display: 'flex',
         flexDirection: 'column',
-        background: '#0f0f1a',
+        background: '#011367',
         padding: '2rem',
         overflow: 'auto',
       }}

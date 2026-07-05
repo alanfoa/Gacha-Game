@@ -25,7 +25,7 @@ export function Spinner({ text = 'CARGANDO' }: { text?: string }) {
         alignItems: 'center',
         justifyContent: 'center',
         gap: '2rem',
-        background: '#0f0f1a',
+        background: '#011367',
         color: '#60a5fa',
       }}
     >

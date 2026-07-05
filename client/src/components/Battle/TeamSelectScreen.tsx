@@ -158,7 +158,7 @@ export function TeamSelectScreen() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        background: '#0f0f1a',
+        background: '#011367',
         padding: '2rem',
         position: 'relative',
         overflow: 'hidden',

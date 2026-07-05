@@ -102,7 +102,7 @@ export function OptionsScreen() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0f0f1a',
+        background: '#011367',
         gap: '1.5rem',
         position: 'relative',
         willChange: 'transform',

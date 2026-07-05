@@ -1,11 +1,11 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import gsap from 'gsap';
+import { motion } from 'motion/react';
 import { useScreenStore } from '../../store/screenStore';
 import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
+import { useGameStore } from '../../store/gameStore';
 import { MusicPlayer } from '../UI/MusicPlayer';
 import { BGM, DEFAULT_MENU_VOLUME } from '../../audio/sounds';
-import { useGameStore } from '../../store/gameStore';
 
 const OPTIONS = [
   { label: 'BATALLA', screen: 'teamSelect' as const },
@@ -16,12 +16,110 @@ const OPTIONS = [
   { label: 'CERRAR SESIÓN', action: 'logout' as const },
 ] as const;
 
+const OPTION_DESCRIPTIONS: Record<string, string> = {
+  BATALLA: 'Enfréntate a otros jugadores',
+  TIENDA: 'Compra sobres de cartas',
+  MISIONES: 'Completa misiones diarias',
+  'MI ÁLBUM': 'Revisa tu colección',
+  OPCIONES: 'Configuración del juego',
+  'CERRAR SESIÓN': 'Volver al menú principal',
+};
+
+function getItemFontSize(index: number): string {
+  const base = 2.9 + index * 0.06;
+  return `clamp(2rem, ${base}vw, ${(base * 0.9).toFixed(2)}rem)`;
+}
+
+function MenuOption({
+  label,
+  isSelected,
+  index,
+  onClick,
+}: {
+  label: string;
+  isSelected: boolean;
+  index: number;
+  onClick: () => void;
+}) {
+  return (
+    <motion.div
+      className="relative cursor-pointer select-none flex items-center"
+      style={{
+        marginLeft: `${index * 22}px`,
+        marginTop: index > 0 ? "-7px" : "0",
+      }}
+      animate={{
+        scale: isSelected ? 1.14 : 1,
+        x: isSelected ? 14 : 0,
+      }}
+      transition={{ type: "spring", stiffness: 520, damping: 34 }}
+      onClick={onClick}
+    >
+      <motion.div
+        style={{
+          position: "absolute",
+          top: "-5px",
+          bottom: "-5px",
+          left: "-18px",
+          right: "-30px",
+          background: "white",
+          transform: "skewX(-7deg)",
+          transformOrigin: "left center",
+          zIndex: 0,
+          pointerEvents: "none",
+        }}
+        animate={{ scaleX: isSelected ? 1 : 0, opacity: isSelected ? 1 : 0 }}
+        initial={false}
+        transition={{ type: "spring", stiffness: 550, damping: 38 }}
+      />
+
+      <motion.div
+        style={{
+          position: "absolute",
+          top: "-5px",
+          bottom: "-5px",
+          left: "-18px",
+          width: "7px",
+          background: "linear-gradient(to bottom, #FF2255, #CC001A)",
+          transform: "skewX(-7deg)",
+          transformOrigin: "left center",
+          zIndex: 1,
+          pointerEvents: "none",
+        }}
+        animate={{ scaleX: isSelected ? 1 : 0, opacity: isSelected ? 1 : 0 }}
+        initial={false}
+        transition={{ type: "spring", stiffness: 550, damping: 38, delay: 0.03 }}
+      />
+
+      <span
+        style={{
+          position: "relative",
+          zIndex: 2,
+          fontFamily: "'Barlow Condensed', sans-serif",
+          fontWeight: 900,
+          fontStyle: "italic",
+          lineHeight: 1.05,
+          fontSize: getItemFontSize(index),
+          color: isSelected ? "#0A0A1A" : "rgba(160, 230, 255, 0.92)",
+          textShadow: isSelected
+            ? "none"
+            : "0 0 28px rgba(0,180,255,0.55), 0 2px 10px rgba(0,0,80,0.9)",
+          letterSpacing: "-0.01em",
+          padding: "4px 6px",
+        }}
+      >
+        {label}
+      </span>
+    </motion.div>
+  );
+}
+
 export function MenuScreen() {
   const navigate = useScreenStore((s) => s.navigate);
   const logout = useGameStore((s) => s.logout);
+  const user = useGameStore((s) => s.user);
   const [focus, setFocus] = useState(0);
   const focusRef = useRef(0);
-  const containerRef = useRef<HTMLDivElement>(null);
   const mountedAt = useRef(Date.now());
   const { play } = useSound();
 
@@ -57,7 +155,6 @@ export function MenuScreen() {
 
   useInputManager(handleAction);
 
-  // Auto-start BGM if not already playing (covers auto-detect flow)
   useEffect(() => {
     if (!BGM.isPlaying()) {
       BGM.start(DEFAULT_MENU_VOLUME);
@@ -65,212 +162,252 @@ export function MenuScreen() {
   }, []);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    try {
-      gsap.timeline({ defaults: { duration: 0.15, ease: 'power2.out' } })
-        .to('.menu-option', { skewX: 0, opacity: 1, stagger: 0.08 });
-    } catch { /* GSAP no disponible */ }
-  }, []);
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY > 0) {
+        focusRef.current = (focusRef.current + 1) % OPTIONS.length;
+        setFocus(focusRef.current);
+        play('nav');
+      } else {
+        focusRef.current = (focusRef.current - 1 + OPTIONS.length) % OPTIONS.length;
+        setFocus(focusRef.current);
+        play('nav');
+      }
+    };
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [play]);
+
+  const currentOption = OPTIONS[focus];
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        height: '100vh',
-        width: '100vw',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-        background: '#0f0f1a',
-        willChange: 'transform',
-      }}
-    >
-      {/* Radial glow */}
+    <div className="w-full h-screen overflow-hidden relative" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          zIndex: 0,
+        }}
+      >
+        <source src="/videos/persona_3_remake_loop.mp4" type="video/mp4" />
+      </video>
+
       <div
         style={{
           position: 'absolute',
-          top: '50%',
-          left: '50%',
-          width: '600px',
-          height: '600px',
-          transform: 'translate(-50%, -50%)',
-          background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)',
+          inset: 0,
+          background: 'rgba(0,0,0,0.45)',
+          zIndex: 1,
           pointerEvents: 'none',
         }}
       />
 
-      {/* Geometric background */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: `
-            linear-gradient(135deg, rgba(30,64,175,0.12) 0%, transparent 50%),
-            linear-gradient(225deg, rgba(59,130,246,0.08) 0%, transparent 50%)
-          `,
-          clipPath: 'polygon(0 0, 100% 0, 85% 100%, 0 85%)',
-        }}
-      />
+      <motion.div
+        style={{ position: 'absolute', top: '5.5%', left: '3%', zIndex: 20 }}
+        initial={{ x: -260, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 255, damping: 26, delay: 0.5 }}
+      >
+        <div
+          style={{
+            background: 'white',
+            border: '2.5px solid #111',
+            padding: '8px 18px 8px 14px',
+            minWidth: '148px',
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: '1.65rem',
+              fontWeight: 700,
+              color: '#0A0A0A',
+              lineHeight: 1.1,
+              letterSpacing: '0.01em',
+            }}
+          >
+            ¥ {user?.coins?.toLocaleString() ?? '0'}
+          </div>
+          <div
+            style={{
+              fontSize: '0.62rem',
+              color: '#555',
+              marginTop: '2px',
+              letterSpacing: '0.08em',
+            }}
+          >
+            current wallet
+          </div>
+        </div>
+      </motion.div>
 
       <div
         style={{
           position: 'absolute',
-          inset: 0,
-          background: `
-            repeating-linear-gradient(
-              -15deg,
-              transparent,
-              transparent 40px,
-              rgba(59,130,246,0.05) 40px,
-              rgba(59,130,246,0.05) 41px
-            )
-          `,
-        }}
-      />
-
-      <p
-        style={{
-          color: '#60a5fa',
-          fontSize: '0.875rem',
-          fontWeight: 600,
-          letterSpacing: '0.5em',
-          textTransform: 'uppercase',
-          marginBottom: '3rem',
-          opacity: 0.9,
-          position: 'relative',
-          zIndex: 20,
+          left: '47%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 10,
         }}
       >
-        GACHA PERSONA
-      </p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'relative', zIndex: 10 }}>
-        {OPTIONS.map((opt, i) => {
-          const handleClick = 'screen' in opt
-            ? () => { focusRef.current = i; setFocus(i); play('confirm'); navigate(opt.screen); }
-            : () => { focusRef.current = i; setFocus(i); play('confirm'); logout(); BGM.switchToMenu(); navigate('mainmenu'); };
-          return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+          {OPTIONS.map((opt, i) => (
             <MenuOption
               key={opt.label}
               label={opt.label}
-              focused={i === focus}
-              onClick={handleClick}
-              onHover={() => {
-                focusRef.current = i;
-                setFocus(i);
+              isSelected={focus === i}
+              index={i}
+              onClick={() => {
+                const elapsed = Date.now() - mountedAt.current;
+                if (elapsed < 300) return;
+                play('confirm');
+                if ('screen' in opt) {
+                  navigate(opt.screen);
+                } else if (opt.action === 'logout') {
+                  logout();
+                  BGM.switchToMenu();
+                  navigate('mainmenu');
+                }
               }}
             />
-          );
-        })}
+          ))}
+        </div>
       </div>
 
-      <p
+      <motion.div
+        key={focus}
         style={{
           position: 'absolute',
-          bottom: '2rem',
-          color: '#6b7280',
-          fontSize: '0.75rem',
-          letterSpacing: '0.2em',
+          top: '7%',
+          right: '4%',
+          textAlign: 'right',
+          zIndex: 20,
+        }}
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22 }}
+      >
+        <div
+          style={{
+            color: 'rgba(255,255,255,0.65)',
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontSize: '0.82rem',
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            maxWidth: '220px',
+            textShadow: '0 2px 8px rgba(0,0,0,0.7)',
+          }}
+        >
+          {OPTION_DESCRIPTIONS[currentOption.label]}
+        </div>
+      </motion.div>
+
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '4%',
+          right: '3%',
+          textAlign: 'right',
           zIndex: 20,
         }}
       >
-        FLECHAS · ENTER · GAMEPAD
-      </p>
+        <div
+          style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontWeight: 700,
+            color: 'white',
+            fontSize: '1.1rem',
+            letterSpacing: '0.03em',
+            textShadow: '0 2px 8px rgba(0,0,0,0.7)',
+          }}
+        >
+          CONFIRMAR
+        </div>
+        <div
+          style={{
+            color: 'rgba(255,255,255,0.45)',
+            fontSize: '0.6rem',
+            letterSpacing: '0.35em',
+            marginTop: '3px',
+            marginBottom: '7px',
+            textShadow: '0 2px 8px rgba(0,0,0,0.7)',
+          }}
+        >
+          Command ───────────────
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: '18px',
+            alignItems: 'center',
+          }}
+        >
+          {[
+            { label: 'A', text: 'Confirm' },
+            { label: 'B', text: 'Cerrar' },
+          ].map(({ label, text }) => (
+            <span
+              key={label}
+              style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
+            >
+              <span
+                style={{
+                  background: 'white',
+                  color: '#0A0A1A',
+                  borderRadius: '50%',
+                  width: '20px',
+                  height: '20px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  flexShrink: 0,
+                }}
+              >
+                {label}
+              </span>
+              <span
+                style={{
+                  color: 'white',
+                  fontSize: '0.88rem',
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontWeight: 600,
+                  textShadow: '0 2px 8px rgba(0,0,0,0.7)',
+                }}
+              >
+                {text}
+              </span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '4%',
+          left: '3%',
+          color: 'rgba(255,255,255,0.45)',
+          fontSize: '0.72rem',
+          fontFamily: "'Barlow Condensed', sans-serif",
+          letterSpacing: '0.15em',
+          zIndex: 20,
+          textShadow: '0 2px 8px rgba(0,0,0,0.7)',
+        }}
+      >
+        ↑ ↓  NAVEGAR  •  SCROLL
+      </div>
 
       <MusicPlayer />
     </div>
-  );
-}
-
-function MenuOption({
-  label,
-  focused,
-  onClick,
-  onHover,
-}: {
-  label: string;
-  focused: boolean;
-  onClick: () => void;
-  onHover: () => void;
-}) {
-  const ref = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    try {
-      if (focused) {
-        gsap.to(ref.current, {
-          x: 20,
-          scaleX: 1.15,
-          backgroundColor: 'rgba(59,130,246,0.12)',
-          borderColor: '#60a5fa',
-          duration: 0.3,
-          ease: 'power3.out',
-        });
-      } else {
-        gsap.to(ref.current, {
-          x: 0,
-          scaleX: 1,
-          backgroundColor: 'transparent',
-          borderColor: 'transparent',
-          duration: 0.3,
-          ease: 'power3.out',
-        });
-      }
-    } catch { /* GSAP no disponible */ }
-  }, [focused]);
-
-  return (
-    <button
-      ref={ref}
-      onClick={onClick}
-      onMouseEnter={onHover}
-      className="menu-option"
-      style={{
-        opacity: 0,
-        transform: 'skewX(-15deg)',
-        background: 'transparent',
-        border: '1px solid transparent',
-        padding: '1rem 3rem',
-        cursor: 'pointer',
-        textAlign: 'left',
-        transition: 'none',
-        minWidth: '350px',
-        position: 'relative',
-        willChange: 'transform',
-      }}
-    >
-      <span
-        style={{
-          fontSize: '2.5rem',
-          fontWeight: 900,
-          color: focused ? '#ffffff' : '#9ca3af',
-          letterSpacing: '0.05em',
-          fontFamily: 'system-ui, sans-serif',
-          transition: 'color 0.3s ease',
-          textShadow: focused ? '0 0 20px rgba(96,165,250,0.3)' : 'none',
-        }}
-      >
-        {label}
-      </span>
-      {focused && (
-        <span
-          style={{
-            position: 'absolute',
-            right: '1rem',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: '#60a5fa',
-            fontSize: '1.5rem',
-            textShadow: '0 0 10px rgba(96,165,250,0.5)',
-          }}
-        >
-          ▶
-        </span>
-      )}
-    </button>
   );
 }

@@ -78,7 +78,7 @@ export function MenuPrincipal() {
         justifyContent: 'center',
         position: 'relative',
         overflow: 'hidden',
-        background: '#0f0f1a',
+        background: '#011367',
         cursor: 'default',
       }}
     >
