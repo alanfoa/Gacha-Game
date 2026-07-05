@@ -554,8 +554,8 @@ function OpeningScreen({ pack, onDone }: { pack: Pack; onDone: () => void }) {
   );
 }
 
-function ResultsScreen({ pack, cards, onCardClick, onShop }: {
-  pack: Pack; cards: Card[]; onCardClick: (c: Card) => void; onShop: () => void;
+function ResultsScreen({ pack, cards, onCardClick, onShop, isFree }: {
+  pack: Pack; cards: Card[]; onCardClick: (c: Card) => void; onShop: () => void; isFree?: boolean;
 }) {
   const [revealed, setRevealed]   = useState<Set<number>>(new Set());
   const [activeIdx, setActiveIdx] = useState(0);
@@ -805,8 +805,9 @@ function ResultsScreen({ pack, cards, onCardClick, onShop }: {
                 color:"rgba(255,255,255,0.55)", border:"1px solid rgba(255,255,255,0.1)",
                 boxShadow: focusArea === "shop" ? "0 0 16px rgba(255,255,255,0.2)" : "none",
               }}>
-              ← TIENDA
+              {isFree ? "← MISIONES" : "← TIENDA"}
             </button>
+            {!isFree && (
             <button ref={openBtnRef} onClick={onShop}
               className="px-5 py-2.5 rounded-xl font-black text-sm tracking-wider hover:brightness-115 transition-all"
               style={{
@@ -817,6 +818,7 @@ function ResultsScreen({ pack, cards, onCardClick, onShop }: {
               }}>
               ABRIR OTRO SOBRE
             </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -1088,7 +1090,7 @@ export function PackOpeningStandalone() {
         )}
         {screen === "results" && pack && (
           <motion.div key="results" className="w-full h-full" initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }} exit={{ opacity:0 }} transition={{ duration:0.36 }}>
-            <ResultsScreen pack={pack} cards={cards} onCardClick={goDetail} onShop={goShop}/>
+            <ResultsScreen pack={pack} cards={cards} onCardClick={goDetail} onShop={goShop} isFree={isFree.current}/>
           </motion.div>
         )}
         {screen === "detail" && detail && (
