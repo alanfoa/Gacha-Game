@@ -1,8 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: ui-monospace, Consolas, monospace;
+  --font-sans: 'Rajdhani', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
 }
 
 * {

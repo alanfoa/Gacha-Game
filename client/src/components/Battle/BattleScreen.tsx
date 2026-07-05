@@ -5,17 +5,9 @@ import { useGameStore, type BattleCardState } from '../../store/gameStore';
 import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
 import { BGM } from '../../audio/sounds';
-import { getCardCanvas } from '../Sobre/cardTexture';
-import { loadCardImage } from '../../utils/cardImage';
+import { AnimeCard, type Card, type Rarity, type El } from '../Card/AnimeCard';
 
 type Phase = 'player_turn' | 'resolving' | 'result';
-
-const RARITY_COLORS: Record<string, string> = {
-  COMUN: '#9ca3af',
-  RARO: '#60a5fa',
-  EPICO: '#a855f7',
-  LEGENDARIO: '#f59e0b',
-};
 
 export function BattleScreen() {
   const back = useScreenStore((s) => s.back);
@@ -513,8 +505,6 @@ export function BattleScreen() {
 
   useInputManager(handleAction);
 
-  const getCardColor = (rarity: string) => RARITY_COLORS[rarity] ?? '#9ca3af';
-
   if (playerBattleCards.length === 0) {
     return (
       <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f1a', color: '#9ca3af' }}>
@@ -621,7 +611,6 @@ export function BattleScreen() {
             <MiniBattleCard
               key={card.cardId}
               card={card}
-              color={getCardColor(card.rarity)}
               isAlive={card.currentHp > 0}
               isActive={phase !== 'player_turn' && card.uid === activeCardSpec?.uid}
             />
@@ -707,7 +696,6 @@ export function BattleScreen() {
             <MiniBattleCard
               key={card.cardId}
               card={card}
-              color={getCardColor(card.rarity)}
               isAlive={card.currentHp > 0}
               isActive={phase === 'player_turn' ? card === currentCard : card.uid === activeCardSpec?.uid}
             />
@@ -862,35 +850,30 @@ export function BattleScreen() {
   );
 }
 
+function battleToCard(c: BattleCardState): Card {
+  return {
+    id: parseInt(c.cardId) || 0,
+    name: c.name,
+    rarity: c.rarity as Rarity,
+    element: c.element as El,
+    atk: c.stats.attack,
+    def: c.stats.defense,
+    mag: c.stats.magic,
+    spd: c.stats.speed,
+    lck: c.stats.luck,
+    imageId: c.cardId,
+  };
+}
+
 function MiniBattleCard({
   card,
-  color,
   isAlive,
   isActive,
 }: {
   card: BattleCardState;
-  color: string;
   isAlive: boolean;
   isActive?: boolean;
 }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const redraw = () => {
-    if (canvasRef.current) {
-      const src = getCardCanvas(card.rarity, card.name, 130, card.cardId);
-      const ctx = canvasRef.current.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        ctx.drawImage(src, 0, 0, canvasRef.current.width, canvasRef.current.height);
-      }
-    }
-  };
-
-  useEffect(() => {
-    redraw();
-    if (card.cardId) loadCardImage(card.cardId).then(redraw);
-  }, [card.rarity, card.name, card.cardId]);
-
   const hpPercent = card.currentHp / card.maxHp;
   const manaPercent = card.currentMana / card.maxMana;
 
@@ -899,7 +882,7 @@ function MiniBattleCard({
       id={`battle-card-${card.cardId}`}
       style={{
         background: isActive ? 'rgba(250,204,21,0.1)' : 'rgba(30,30,58,0.8)',
-        border: `2px solid ${isActive ? '#facc15' : isAlive ? color : '#374151'}`,
+        border: `2px solid ${isActive ? '#facc15' : 'transparent'}`,
         boxShadow: isActive ? '0 0 16px rgba(250,204,21,0.25)' : undefined,
         borderRadius: '8px',
         padding: '0.75rem',
@@ -912,12 +895,7 @@ function MiniBattleCard({
         width: '160px',
       }}
     >
-      <canvas
-        ref={canvasRef}
-        width={130}
-        height={182}
-        style={{ width: '130px', height: '182px', borderRadius: '4px' }}
-      />
+      <AnimeCard card={battleToCard(card)} size="sm" />
       <span style={{
         color: isAlive ? '#e5e7eb' : '#6b7280',
         fontSize: '0.8125rem',

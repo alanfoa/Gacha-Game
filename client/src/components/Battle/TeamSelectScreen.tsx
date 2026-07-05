@@ -4,8 +4,7 @@ import { useScreenStore } from '../../store/screenStore';
 import { useGameStore, type CardData } from '../../store/gameStore';
 import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
-import { getCardCanvas } from '../Sobre/cardTexture';
-import { loadCardImage } from '../../utils/cardImage';
+import { AnimeCard, type Card, type Rarity, type El } from '../Card/AnimeCard';
 
 export function TeamSelectScreen() {
   const back = useScreenStore((s) => s.back);
@@ -303,6 +302,21 @@ export function TeamSelectScreen() {
   );
 }
 
+function toCard(c: CardData): Card {
+  return {
+    id: parseInt(c.id) || 0,
+    name: c.name,
+    rarity: c.rarity as Rarity,
+    element: c.element as El,
+    atk: c.stats.attack,
+    def: c.stats.defense,
+    mag: c.stats.magic,
+    spd: c.stats.speed,
+    lck: c.stats.luck,
+    imageId: c.id,
+  };
+}
+
 function CardSelectButton({
   card,
   isSelected,
@@ -316,38 +330,21 @@ function CardSelectButton({
   onClick: () => void;
   onHover: () => void;
 }) {
-  const ref = useRef<HTMLButtonElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const redraw = () => {
-      if (canvasRef.current) {
-        const src = getCardCanvas(card.rarity, card.name, 120, card.id);
-        const ctx = canvasRef.current.getContext('2d');
-        if (ctx) {
-          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-          ctx.drawImage(src, 0, 0, canvasRef.current.width, canvasRef.current.height);
-        }
-      }
-    };
-    redraw();
-    if (card.id) loadCardImage(card.id).then(redraw);
-  }, [card.rarity, card.name, card.id]);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!ref.current) return;
     try {
       gsap.to(ref.current, {
         scale: isFocused ? 1.08 : 1,
-        borderColor: isSelected ? '#fbbf24' : isFocused ? '#60a5fa' : '#1e1e3a',
         duration: 0.2,
         ease: 'power2.out',
       });
     } catch { /* GSAP no disponible */ }
-  }, [isFocused, isSelected]);
+  }, [isFocused]);
 
   return (
-    <button
+    <div
       ref={ref}
       onClick={onClick}
       onMouseEnter={onHover}
@@ -355,45 +352,20 @@ function CardSelectButton({
       style={{
         opacity: 0,
         scale: 0.9,
-        background: '#1e1e3a',
-        border: '2px solid',
-        borderColor: isSelected ? '#fbbf24' : isFocused ? '#60a5fa' : '#1e1e3a',
-        borderRadius: '8px',
-        padding: '0.5rem',
-        cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         gap: '0.25rem',
+        cursor: 'pointer',
         transition: 'none',
       }}
     >
-      <canvas
-        ref={canvasRef}
-        width={120}
-        height={168}
-        style={{ width: '120px', height: '168px', borderRadius: '4px' }}
-      />
-      <span style={{
-        color: isSelected ? '#fbbf24' : isFocused ? '#60a5fa' : '#9ca3af',
-        fontSize: '0.75rem',
-        fontWeight: 700,
-        letterSpacing: '0.05em',
-        marginTop: '0.25rem',
-      }}>
-        {card.name}
-      </span>
-      <div style={{ display: 'flex', gap: '0.375rem', fontSize: '0.6rem', fontWeight: 600, color: '#6b7280' }}>
-        <span style={{ color: '#ef4444' }}>ATK {card.stats.attack}</span>
-        <span style={{ color: '#60a5fa' }}>SPD {card.stats.speed}</span>
-        <span style={{ color: '#a855f7' }}>MAG {card.stats.magic}</span>
-        <span style={{ color: '#3b82f6' }}>DEF {card.stats.defense}</span>
-      </div>
+      <AnimeCard card={toCard(card)} size="sm" />
       {isSelected && (
         <span style={{ color: '#fbbf24', fontSize: '0.625rem', fontWeight: 600 }}>
           ✓ SELECCIONADA
         </span>
       )}
-    </button>
+    </div>
   );
 }

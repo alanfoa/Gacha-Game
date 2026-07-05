@@ -8,13 +8,13 @@ import { BGM, DEFAULT_MENU_VOLUME } from '../../audio/sounds';
 import { useGameStore } from '../../store/gameStore';
 
 const OPTIONS = [
-  { label: 'ABRIR SOBRE', screen: 'pack' as const },
   { label: 'BATALLA', screen: 'teamSelect' as const },
+  { label: 'TIENDA', screen: 'pack' as const },
   { label: 'MISIONES', screen: 'missions' as const },
   { label: 'MI ÁLBUM', screen: 'album' as const },
   { label: 'OPCIONES', screen: 'options' as const },
   { label: 'CERRAR SESIÓN', action: 'logout' as const },
-];
+] as const;
 
 export function MenuScreen() {
   const navigate = useScreenStore((s) => s.navigate);

@@ -1,7 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
-import { PlaceholderCard } from './PlaceholderCard';
+import { AnimeCard, type Card, type Rarity, type El } from '../Card/AnimeCard';
 import type { CardData } from '../../store/gameStore';
+
+function toCard(c: CardData): Card {
+  return {
+    id: parseInt(c.id) || 0,
+    name: c.name,
+    rarity: c.rarity as Rarity,
+    element: c.element as El,
+    atk: c.stats.attack,
+    def: c.stats.defense,
+    mag: c.stats.magic,
+    spd: c.stats.speed,
+    lck: c.stats.luck,
+    imageId: c.id,
+  };
+}
 
 interface Props {
   card: CardData;
@@ -105,7 +120,7 @@ export function CardModal({ card, owned, onClose }: Props) {
       >
         <div ref={cardOuterRef} style={{ perspective: '800px', transition: 'transform 0.3s ease-out' }}>
           <div ref={cardInnerRef} style={{ willChange: 'transform', transition: 'transform 0.08s ease-out' }}>
-            <PlaceholderCard rarity={card.rarity} name={owned ? card.name : '???'} cardId={owned ? card.id : undefined} stats={owned ? card.stats : undefined} />
+            <AnimeCard card={{ ...toCard(card), name: owned ? card.name : '???', imageId: owned ? card.id : undefined }} dimmed={!owned} size="lg" />
           </div>
         </div>
 

@@ -5,7 +5,7 @@ import { useScreenStore } from './store/screenStore';
 import { MenuPrincipal } from './components/Menu/MenuPrincipal';
 import { LoginScreen } from './components/Menu/LoginScreen';
 import { MenuScreen } from './components/Menu/MenuScreen';
-import { PackScreen } from './components/Sobre/PackScreen';
+import { PackOpeningFlow } from './components/PackOpening/PackOpeningFlow';
 import { AlbumScreen } from './components/Album/AlbumScreen';
 import { OptionsScreen } from './components/UI/OptionsScreen';
 import { TeamSelectScreen } from './components/Battle/TeamSelectScreen';
@@ -107,7 +107,7 @@ function App() {
         case 'menu':
           return <MenuScreen />;
         case 'pack':
-          return <PackScreen />;
+          return <PackOpeningFlow />;
         case 'album':
           return <AlbumScreen />;
         case 'options':
@@ -137,7 +137,7 @@ function App() {
     <ErrorBoundary>
       <div style={{ position: 'relative' }}>
         {/* Coins bar - hidden on public screens and battle */}
-        {user && current !== 'battle' && !publicScreens.includes(current) && (
+        {user && current !== 'battle' && current !== 'pack' && !publicScreens.includes(current) && (
           <div
             style={{
               position: 'fixed', top: '1rem', right: '1.5rem',

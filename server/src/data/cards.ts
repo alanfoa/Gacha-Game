@@ -143,17 +143,17 @@ export const cards: Card[] = [
   // e01
   { id: 'e01', name: 'Tanjiro', anime: 'Demon Slayer', rarity: Rarity.Epic, stats: S(55, 45, 42, 18, 68), hp: 190, maxMana: 100, element: Element.Fire, attackName: 'Tajo de la Superficie', attackCost: 0, attackCooldown: 0, magicName: 'Vals de Fuego', magicCost: 22, magicCooldown: 1, skillName: 'Dragón del Cambio', skillCost: 35, skillCooldown: 3 },
   // e02
-  { id: 'e02', name: 'Naruto (Base)', anime: 'Naruto', rarity: Rarity.Epic, stats: S(52, 42, 50, 16, 65), hp: 195, maxMana: 100, element: Element.Light, attackName: 'Combo de Naruto', attackCost: 0, attackCooldown: 0, magicName: 'Rasengan', magicCost: 24, magicCooldown: 1, skillName: 'Odama Rasengan', skillCost: 38, skillCooldown: 3 },
+  { id: 'e02', name: 'Naruto', anime: 'Naruto', rarity: Rarity.Epic, stats: S(52, 42, 50, 16, 65), hp: 195, maxMana: 100, element: Element.Light, attackName: 'Combo de Naruto', attackCost: 0, attackCooldown: 0, magicName: 'Rasengan', magicCost: 24, magicCooldown: 1, skillName: 'Odama Rasengan', skillCost: 38, skillCooldown: 3 },
   // e03
-  { id: 'e03', name: 'Luffy (Base)', anime: 'One Piece', rarity: Rarity.Epic, stats: S(58, 44, 30, 18, 70), hp: 200, maxMana: 100, element: Element.Light, attackName: 'Gomu Gomu no Pistol', attackCost: 0, attackCooldown: 0, magicName: 'Red Hawk', magicCost: 24, magicCooldown: 2, skillName: 'Elephant Gun', skillCost: 36, skillCooldown: 3 },
+  { id: 'e03', name: 'Luffy', anime: 'One Piece', rarity: Rarity.Epic, stats: S(58, 44, 30, 18, 70), hp: 200, maxMana: 100, element: Element.Light, attackName: 'Gomu Gomu no Pistol', attackCost: 0, attackCooldown: 0, magicName: 'Red Hawk', magicCost: 24, magicCooldown: 2, skillName: 'Elephant Gun', skillCost: 36, skillCooldown: 3 },
   // e04
-  { id: 'e04', name: 'Eren (Titán)', anime: 'Attack on Titan', rarity: Rarity.Epic, stats: S(62, 52, 22, 10, 58), hp: 210, maxMana: 100, element: Element.Earth, attackName: 'Golpe de Titán', attackCost: 0, attackCooldown: 0, magicName: 'Endurecimiento', magicCost: 20, magicCooldown: 2, skillName: 'Rugido de Ataque', skillCost: 34, skillCooldown: 3 },
+  { id: 'e04', name: 'Eren', anime: 'Attack on Titan', rarity: Rarity.Epic, stats: S(62, 52, 22, 10, 58), hp: 210, maxMana: 100, element: Element.Earth, attackName: 'Golpe de Titán', attackCost: 0, attackCooldown: 0, magicName: 'Endurecimiento', magicCost: 20, magicCooldown: 2, skillName: 'Rugido de Ataque', skillCost: 34, skillCooldown: 3 },
   // e05
   { id: 'e05', name: 'Joseph Joestar', anime: "JoJo's", rarity: Rarity.Epic, stats: S(48, 40, 48, 24, 72), hp: 185, maxMana: 100, element: Element.Light, attackName: 'Golpe con Hilos', attackCost: 0, attackCooldown: 0, magicName: 'Hamon Overdrive', magicCost: 22, magicCooldown: 1, skillName: 'Elástico de Hamon', skillCost: 32, skillCooldown: 2 },
   // e06
-  { id: 'e06', name: 'Gojo (Base)', anime: 'Jujutsu Kaisen', rarity: Rarity.Epic, stats: S(50, 48, 62, 20, 85), hp: 185, maxMana: 100, element: Element.Light, attackName: 'Golpe Directo', attackCost: 0, attackCooldown: 0, magicName: 'Azul (Ao)', magicCost: 26, magicCooldown: 1, skillName: 'Rojo (Aka)', skillCost: 40, skillCooldown: 3 },
+  { id: 'e06', name: 'Gojo', anime: 'Jujutsu Kaisen', rarity: Rarity.Epic, stats: S(50, 48, 62, 20, 85), hp: 185, maxMana: 100, element: Element.Light, attackName: 'Golpe Directo', attackCost: 0, attackCooldown: 0, magicName: 'Azul (Ao)', magicCost: 26, magicCooldown: 1, skillName: 'Rojo (Aka)', skillCost: 40, skillCooldown: 3 },
   // e07
-  { id: 'e07', name: 'Sukuna (Base)', anime: 'Jujutsu Kaisen', rarity: Rarity.Epic, stats: S(58, 46, 58, 18, 90), hp: 200, maxMana: 100, element: Element.Shadow, attackName: 'Desmantelar', attackCost: 0, attackCooldown: 0, magicName: 'Flecha de Fuego', magicCost: 28, magicCooldown: 2, skillName: 'Partir', skillCost: 42, skillCooldown: 3 },
+  { id: 'e07', name: 'Sukuna', anime: 'Jujutsu Kaisen', rarity: Rarity.Epic, stats: S(58, 46, 58, 18, 90), hp: 200, maxMana: 100, element: Element.Shadow, attackName: 'Desmantelar', attackCost: 0, attackCooldown: 0, magicName: 'Flecha de Fuego', magicCost: 28, magicCooldown: 2, skillName: 'Partir', skillCost: 42, skillCooldown: 3 },
   // e08
   { id: 'e08', name: 'Rudeus Greyrat', anime: 'Mushoku Tensei', rarity: Rarity.Epic, stats: S(40, 38, 68, 16, 62), hp: 185, maxMana: 100, element: Element.Water, attackName: 'Golpe de Bastón', attackCost: 0, attackCooldown: 0, magicName: 'Stone Cannon', magicCost: 28, magicCooldown: 1, skillName: 'Perturbación de Magia', skillCost: 40, skillCooldown: 3 },
   // e09
@@ -161,13 +161,13 @@ export const cards: Card[] = [
   // e10
   { id: 'e10', name: 'Killua', anime: 'Hunter x Hunter', rarity: Rarity.Epic, stats: S(50, 38, 44, 18, 88), hp: 182, maxMana: 100, element: Element.Wind, attackName: 'Garras de Asesino', attackCost: 0, attackCooldown: 0, magicName: 'Palma de Trueno', magicCost: 24, magicCooldown: 1, skillName: 'Godspeed', skillCost: 38, skillCooldown: 3 },
   // e11
-  { id: 'e11', name: 'Sasuke (Base)', anime: 'Naruto', rarity: Rarity.Epic, stats: S(54, 42, 54, 16, 78), hp: 188, maxMana: 100, element: Element.Shadow, attackName: 'Tajo Kusanagi', attackCost: 0, attackCooldown: 0, magicName: 'Chidori', magicCost: 26, magicCooldown: 1, skillName: 'Kirin', skillCost: 44, skillCooldown: 3 },
+  { id: 'e11', name: 'Sasuke', anime: 'Naruto', rarity: Rarity.Epic, stats: S(54, 42, 54, 16, 78), hp: 188, maxMana: 100, element: Element.Shadow, attackName: 'Tajo Kusanagi', attackCost: 0, attackCooldown: 0, magicName: 'Chidori', magicCost: 26, magicCooldown: 1, skillName: 'Kirin', skillCost: 44, skillCooldown: 3 },
   // e12
-  { id: 'e12', name: 'Makoto Yuki (Joker P3)', anime: 'Persona 3', rarity: Rarity.Epic, stats: S(48, 42, 58, 18, 70), hp: 190, maxMana: 100, element: Element.Light, attackName: 'Corte de Espada', attackCost: 0, attackCooldown: 0, magicName: 'Agidyne', magicCost: 26, magicCooldown: 1, skillName: 'Cadenza de Orpheus', skillCost: 36, skillCooldown: 3 },
+  { id: 'e12', name: 'Makoto Yuki', anime: 'Persona 3', rarity: Rarity.Epic, stats: S(48, 42, 58, 18, 70), hp: 190, maxMana: 100, element: Element.Light, attackName: 'Corte de Espada', attackCost: 0, attackCooldown: 0, magicName: 'Agidyne', magicCost: 26, magicCooldown: 1, skillName: 'Cadenza de Orpheus', skillCost: 36, skillCooldown: 3 },
   // e13
   { id: 'e13', name: 'Yu Narukami', anime: 'Persona 4', rarity: Rarity.Epic, stats: S(50, 40, 56, 18, 72), hp: 188, maxMana: 100, element: Element.Wind, attackName: 'Tajo de Katana', attackCost: 0, attackCooldown: 0, magicName: 'Ziodyne', magicCost: 26, magicCooldown: 1, skillName: 'Myriad Truths', skillCost: 38, skillCooldown: 3 },
   // e14
-  { id: 'e14', name: 'Ren Amamiya (Joker P5)', anime: 'Persona 5', rarity: Rarity.Epic, stats: S(46, 38, 60, 20, 74), hp: 185, maxMana: 100, element: Element.Shadow, attackName: 'Tiro de Pistola', attackCost: 0, attackCooldown: 0, magicName: 'Eigaon', magicCost: 28, magicCooldown: 1, skillName: 'Balas de Alta', skillCost: 40, skillCooldown: 3 },
+  { id: 'e14', name: 'Ren Amamiya', anime: 'Persona 5', rarity: Rarity.Epic, stats: S(46, 38, 60, 20, 74), hp: 185, maxMana: 100, element: Element.Shadow, attackName: 'Tiro de Pistola', attackCost: 0, attackCooldown: 0, magicName: 'Eigaon', magicCost: 28, magicCooldown: 1, skillName: 'Balas de Alta', skillCost: 40, skillCooldown: 3 },
   // e15
   { id: 'e15', name: 'Light Yagami', anime: 'Death Note', rarity: Rarity.Epic, stats: S(30, 28, 62, 28, 68), hp: 175, maxMana: 100, element: Element.Shadow, attackName: 'Estratagema Genial', attackCost: 0, attackCooldown: 0, magicName: 'Sentencia del Cuaderno', magicCost: 30, magicCooldown: 2, skillName: 'Dios del Nuevo Mundo', skillCost: 44, skillCooldown: 4 },
   // e16
@@ -179,115 +179,115 @@ export const cards: Card[] = [
   // e19
   { id: 'e19', name: 'Natsu Dragneel', anime: 'Fairy Tail', rarity: Rarity.Epic, stats: S(60, 44, 44, 14, 74), hp: 200, maxMana: 100, element: Element.Fire, attackName: 'Puño de Hierro de Dragón de Fuego', attackCost: 0, attackCooldown: 0, magicName: 'Rugido del Dragón de Fuego', magicCost: 26, magicCooldown: 1, skillName: 'Loto Carmesí: Puño del Dragón de Fuego', skillCost: 40, skillCooldown: 3 },
   // e20
-  { id: 'e20', name: 'Izuku Midoriya (Deku)', anime: 'My Hero Academia', rarity: Rarity.Epic, stats: S(56, 42, 28, 18, 76), hp: 192, maxMana: 100, element: Element.Light, attackName: 'Delaware Smash', attackCost: 0, attackCooldown: 0, magicName: 'Detroit Smash', magicCost: 24, magicCooldown: 2, skillName: 'One For All 20%', skillCost: 36, skillCooldown: 3 },
+  { id: 'e20', name: 'Izuku Midoriya', anime: 'My Hero Academia', rarity: Rarity.Epic, stats: S(56, 42, 28, 18, 76), hp: 192, maxMana: 100, element: Element.Light, attackName: 'Delaware Smash', attackCost: 0, attackCooldown: 0, magicName: 'Detroit Smash', magicCost: 24, magicCooldown: 2, skillName: 'One For All 20%', skillCost: 36, skillCooldown: 3 },
   // e21
   { id: 'e21', name: 'Ken Kaneki', anime: 'Tokyo Ghoul', rarity: Rarity.Epic, stats: S(54, 40, 46, 16, 70), hp: 195, maxMana: 100, element: Element.Shadow, attackName: 'Azote de Rize', attackCost: 0, attackCooldown: 0, magicName: 'Ciempiés de Kakuja', magicCost: 26, magicCooldown: 2, skillName: '¿Cuánto es 1000 menos 7?', skillCost: 42, skillCooldown: 3 },
 
   // ═══ LEGENDARIOS ═══ (ataque + magia + strike + ultimate, mana 130, power ~360-380 total stats)
   // l01
-  { id: 'l01', name: 'Gojo (Awakened)', anime: 'Jujutsu Kaisen', rarity: Rarity.Legendary, stats: S(78, 68, 92, 22, 130), hp: 245, maxMana: 130, element: Element.Light,
+  { id: 'l01', name: 'Gojo', anime: 'Jujutsu Kaisen', rarity: Rarity.Legendary, stats: S(78, 68, 92, 22, 130), hp: 245, maxMana: 130, element: Element.Light,
     attackName: 'Destello Negro Crítico', attackCost: 0, attackCooldown: 0,
     magicName: 'Azul Máximo', magicCost: 25, magicCooldown: 1,
     skillName: 'Rojo Invertido', skillCost: 38, skillCooldown: 3,
     ultimateName: 'Vacío Inconmensurable', ultimateCost: 65, ultimateCooldown: 5 },
   // l02
-  { id: 'l02', name: 'Sukuna (Rey Maldiciones)', anime: 'Jujutsu Kaisen', rarity: Rarity.Legendary, stats: S(84, 66, 88, 20, 135), hp: 250, maxMana: 130, element: Element.Shadow,
+  { id: 'l02', name: 'Sukuna', anime: 'Jujutsu Kaisen', rarity: Rarity.Legendary, stats: S(84, 66, 88, 20, 135), hp: 250, maxMana: 130, element: Element.Shadow,
     attackName: 'Desmantelar Continuo', attackCost: 0, attackCooldown: 0,
     magicName: 'Fuga Absoluta', magicCost: 28, magicCooldown: 2,
     skillName: 'Corte que Divide el Mundo', skillCost: 42, skillCooldown: 3,
     ultimateName: 'Reliquia Malévola', ultimateCost: 70, ultimateCooldown: 5 },
   // l03
-  { id: 'l03', name: 'Rudeus Greyrat (Dios Magia)', anime: 'Mushoku Tensei', rarity: Rarity.Legendary, stats: S(68, 60, 100, 20, 100), hp: 248, maxMana: 130, element: Element.Water,
+  { id: 'l03', name: 'Rudeus Greyrat', anime: 'Mushoku Tensei', rarity: Rarity.Legendary, stats: S(68, 60, 100, 20, 100), hp: 248, maxMana: 130, element: Element.Water,
     attackName: 'Armadura Mágica MK-I', attackCost: 0, attackCooldown: 0,
     magicName: 'Cañón de Piedra Nuclear', magicCost: 28, magicCooldown: 1,
     skillName: 'Hidro-Bomba Cataclísmica', skillCost: 44, skillCooldown: 3,
     ultimateName: 'Cumulonimbus Absoluto', ultimateCost: 72, ultimateCooldown: 5 },
   // l04
-  { id: 'l04', name: 'Naruto (Sabio 6 Caminos)', anime: 'Naruto', rarity: Rarity.Legendary, stats: S(82, 72, 78, 22, 120), hp: 255, maxMana: 130, element: Element.Light,
+  { id: 'l04', name: 'Naruto', anime: 'Naruto', rarity: Rarity.Legendary, stats: S(82, 72, 78, 22, 120), hp: 255, maxMana: 130, element: Element.Light,
     attackName: 'Rasen Shuriken de Lava', attackCost: 0, attackCooldown: 0,
     magicName: 'Rasengan Magnético', magicCost: 26, magicCooldown: 1,
     skillName: 'Toldo de Bestias con Cola', skillCost: 40, skillCooldown: 3,
     ultimateName: 'Flecha de Indra y Rasengan Final', ultimateCost: 68, ultimateCooldown: 5 },
   // l05
-  { id: 'l05', name: 'Luffy (Gear 5)', anime: 'One Piece', rarity: Rarity.Legendary, stats: S(86, 70, 60, 24, 128), hp: 260, maxMana: 130, element: Element.Light,
+  { id: 'l05', name: 'Luffy', anime: 'One Piece', rarity: Rarity.Legendary, stats: S(86, 70, 60, 24, 128), hp: 260, maxMana: 130, element: Element.Light,
     attackName: 'Gomu Gomu no Gigant', attackCost: 0, attackCooldown: 0,
     magicName: 'Gomu Gomu no Lightning', magicCost: 26, magicCooldown: 2,
     skillName: 'Gomu Gomu no Bajrang Gun', skillCost: 42, skillCooldown: 3,
     ultimateName: 'Amanecer Blanco de la Libertad', ultimateCost: 70, ultimateCooldown: 5 },
   // l06
-  { id: 'l06', name: 'Sasuke (Rinnegan Supremo)', anime: 'Naruto', rarity: Rarity.Legendary, stats: S(80, 66, 88, 20, 125), hp: 248, maxMana: 130, element: Element.Shadow,
+  { id: 'l06', name: 'Sasuke', anime: 'Naruto', rarity: Rarity.Legendary, stats: S(80, 66, 88, 20, 125), hp: 248, maxMana: 130, element: Element.Shadow,
     attackName: 'Chidori Kagutsuchi', attackCost: 0, attackCooldown: 0,
     magicName: 'Amaterasu', magicCost: 30, magicCooldown: 2,
     skillName: 'Susanoo Perfecto: Flecha de Indra', skillCost: 44, skillCooldown: 3,
     ultimateName: 'Chibaku Tensei Celestial', ultimateCost: 72, ultimateCooldown: 6 },
   // l07
-  { id: 'l07', name: 'Tanjiro (Marca Cazador)', anime: 'Demon Slayer', rarity: Rarity.Legendary, stats: S(82, 68, 70, 22, 115), hp: 250, maxMana: 130, element: Element.Fire,
+  { id: 'l07', name: 'Tanjiro', anime: 'Demon Slayer', rarity: Rarity.Legendary, stats: S(82, 68, 70, 22, 115), hp: 250, maxMana: 130, element: Element.Fire,
     attackName: 'Danza del Dios del Fuego', attackCost: 0, attackCooldown: 0,
     magicName: 'Sol Poniente', magicCost: 24, magicCooldown: 1,
     skillName: 'Decimotercera Postura', skillCost: 40, skillCooldown: 3,
     ultimateName: 'Mundo Transparente: Tajo de la Cabeza del Dragón', ultimateCost: 68, ultimateCooldown: 5 },
   // l08
-  { id: 'l08', name: 'Eren (Titán)', anime: 'Attack on Titan', rarity: Rarity.Legendary, stats: S(90, 80, 50, 16, 90), hp: 275, maxMana: 130, element: Element.Earth,
+  { id: 'l08', name: 'Eren', anime: 'Attack on Titan', rarity: Rarity.Legendary, stats: S(90, 80, 50, 16, 90), hp: 275, maxMana: 130, element: Element.Earth,
     attackName: 'Pisotón del Retumbar', attackCost: 0, attackCooldown: 0,
     magicName: 'Control de Titanes Puros', magicCost: 28, magicCooldown: 2,
     skillName: 'Endurecimiento de Cristal Divino', skillCost: 38, skillCooldown: 3,
     ultimateName: 'El Retumbar de la Tierra Absoluto', ultimateCost: 70, ultimateCooldown: 5 },
   // l09
-  { id: 'l09', name: 'Joseph Joestar (Maestro)', anime: "JoJo's", rarity: Rarity.Legendary, stats: S(72, 64, 80, 30, 110), hp: 240, maxMana: 130, element: Element.Light,
+  { id: 'l09', name: 'Joseph Joestar', anime: "JoJo's", rarity: Rarity.Legendary, stats: S(72, 64, 80, 30, 110), hp: 240, maxMana: 130, element: Element.Light,
     attackName: 'Clacker Volley Imbuido', attackCost: 0, attackCooldown: 0,
     magicName: 'Hamon Overdrive Máximo', magicCost: 24, magicCooldown: 1,
     skillName: 'Red de Hilos Solar', skillCost: 36, skillCooldown: 2,
     ultimateName: '¡Tu Siguiente Línea Es...!', ultimateCost: 60, ultimateCooldown: 5 },
   // l10
-  { id: 'l10', name: 'Itadori (Despertado)', anime: 'Jujutsu Kaisen', rarity: Rarity.Legendary, stats: S(84, 68, 66, 20, 118), hp: 252, maxMana: 130, element: Element.Fire,
+  { id: 'l10', name: 'Itadori', anime: 'Jujutsu Kaisen', rarity: Rarity.Legendary, stats: S(84, 68, 66, 20, 118), hp: 252, maxMana: 130, element: Element.Fire,
     attackName: 'Combo de Destellos Negros', attackCost: 0, attackCooldown: 0,
     magicName: 'Santuario Efímero', magicCost: 24, magicCooldown: 1,
     skillName: 'Impacto Punzante de Alma', skillCost: 40, skillCooldown: 3,
     ultimateName: 'Corte de Almas Separadas', ultimateCost: 68, ultimateCooldown: 5 },
   // l11
-  { id: 'l11', name: 'Killua (Velocidad de Dios)', anime: 'Hunter x Hunter', rarity: Rarity.Legendary, stats: S(76, 60, 72, 22, 140), hp: 238, maxMana: 130, element: Element.Wind,
+  { id: 'l11', name: 'Killua', anime: 'Hunter x Hunter', rarity: Rarity.Legendary, stats: S(76, 60, 72, 22, 140), hp: 238, maxMana: 130, element: Element.Wind,
     attackName: 'Torbellino Eléctrico', attackCost: 0, attackCooldown: 0,
     magicName: 'Descarga Eléctrica Narukami', magicCost: 26, magicCooldown: 1,
     skillName: 'Godspeed: Velocidad Lumínica', skillCost: 40, skillCooldown: 3,
     ultimateName: 'Perforación de Corazón Silenciosa', ultimateCost: 66, ultimateCooldown: 5 },
   // l12
-  { id: 'l12', name: 'Makoto Yuki (Mesías P3)', anime: 'Persona 3', rarity: Rarity.Legendary, stats: S(76, 68, 90, 22, 108), hp: 248, maxMana: 130, element: Element.Light,
+  { id: 'l12', name: 'Makoto Yuki', anime: 'Persona 3', rarity: Rarity.Legendary, stats: S(76, 68, 90, 22, 108), hp: 248, maxMana: 130, element: Element.Light,
     attackName: 'Tajo del Fin del Mundo', attackCost: 0, attackCooldown: 0,
     magicName: 'Megidolaon Cósmico', magicCost: 30, magicCooldown: 2,
     skillName: 'Gran Sello (Great Seal)', skillCost: 44, skillCooldown: 3,
     ultimateName: 'Armagedón de Tánatos y Orpheus', ultimateCost: 74, ultimateCooldown: 6 },
   // l13
-  { id: 'l13', name: 'Yu Narukami (Izanagi)', anime: 'Persona 4', rarity: Rarity.Legendary, stats: S(74, 64, 92, 22, 112), hp: 245, maxMana: 130, element: Element.Light,
+  { id: 'l13', name: 'Yu Narukami', anime: 'Persona 4', rarity: Rarity.Legendary, stats: S(74, 64, 92, 22, 112), hp: 245, maxMana: 130, element: Element.Light,
     attackName: 'Tajo de Espada de la Verdad', attackCost: 0, attackCooldown: 0,
     magicName: 'Ziodyne Absoluto', magicCost: 28, magicCooldown: 1,
     skillName: 'Espada de Justicia de Kaguya', skillCost: 42, skillCooldown: 3,
     ultimateName: 'Myriad Truths Divino', ultimateCost: 70, ultimateCooldown: 5 },
   // l14
-  { id: 'l14', name: 'Ren Amamiya (Satanael P5)', anime: 'Persona 5', rarity: Rarity.Legendary, stats: S(72, 62, 96, 24, 115), hp: 242, maxMana: 130, element: Element.Shadow,
+  { id: 'l14', name: 'Ren Amamiya', anime: 'Persona 5', rarity: Rarity.Legendary, stats: S(72, 62, 96, 24, 115), hp: 242, maxMana: 130, element: Element.Shadow,
     attackName: 'Disparo de Alta Traición', attackCost: 0, attackCooldown: 0,
     magicName: 'Maeigaon Cósmico', magicCost: 30, magicCooldown: 2,
     skillName: 'Balas de la Rebelión Final', skillCost: 44, skillCooldown: 3,
     ultimateName: 'Pecado Fatal (Sinful Shell)', ultimateCost: 72, ultimateCooldown: 5 },
   // l15
-  { id: 'l15', name: 'Light Yagami (Kira)', anime: 'Death Note', rarity: Rarity.Legendary, stats: S(56, 50, 98, 34, 105), hp: 235, maxMana: 130, element: Element.Shadow,
+  { id: 'l15', name: 'Light Yagami', anime: 'Death Note', rarity: Rarity.Legendary, stats: S(56, 50, 98, 34, 105), hp: 235, maxMana: 130, element: Element.Shadow,
     attackName: 'Juicio Ejecutivo', attackCost: 0, attackCooldown: 0,
     magicName: 'Manipulación Total de Eventos', magicCost: 32, magicCooldown: 2,
     skillName: 'Sonrisa del Triunfo de Kira', skillCost: 46, skillCooldown: 4,
     ultimateName: 'Sentencia Final del Death Note', ultimateCost: 76, ultimateCooldown: 6 },
   // l16
-  { id: 'l16', name: 'L Lawliet (Estratega)', anime: 'Death Note', rarity: Rarity.Legendary, stats: S(52, 52, 94, 36, 110), hp: 235, maxMana: 130, element: Element.Light,
+  { id: 'l16', name: 'L Lawliet', anime: 'Death Note', rarity: Rarity.Legendary, stats: S(52, 52, 94, 36, 110), hp: 235, maxMana: 130, element: Element.Light,
     attackName: 'Análisis Forense Definitivo', attackCost: 0, attackCooldown: 0,
     magicName: 'Operación de Captura Internacional', magicCost: 30, magicCooldown: 2,
     skillName: 'Red de Espionaje Mundial', skillCost: 44, skillCooldown: 4,
     ultimateName: 'Jaque Mate de la Justicia Absoluta', ultimateCost: 74, ultimateCooldown: 6 },
   // l17
-  { id: 'l17', name: 'Aqua Hoshino (Método Oscuro)', anime: 'Oshi no Ko', rarity: Rarity.Legendary, stats: S(70, 60, 82, 28, 112), hp: 240, maxMana: 130, element: Element.Shadow,
+  { id: 'l17', name: 'Aqua Hoshino', anime: 'Oshi no Ko', rarity: Rarity.Legendary, stats: S(70, 60, 82, 28, 112), hp: 240, maxMana: 130, element: Element.Shadow,
     attackName: 'Interpretación de Venganza', attackCost: 0, attackCooldown: 0,
     magicName: 'Ojos de Estrella de Doble Filo', magicCost: 26, magicCooldown: 2,
     skillName: 'Manipulación Mediática', skillCost: 40, skillCooldown: 3,
     ultimateName: 'Destrucción Psicológica', ultimateCost: 68, ultimateCooldown: 5 },
   // l18
-  { id: 'l18', name: 'Ruby Hoshino (Nueva Era)', anime: 'Oshi no Ko', rarity: Rarity.Legendary, stats: S(64, 56, 88, 30, 108), hp: 238, maxMana: 130, element: Element.Light,
+  { id: 'l18', name: 'Ruby Hoshino', anime: 'Oshi no Ko', rarity: Rarity.Legendary, stats: S(64, 56, 88, 30, 108), hp: 238, maxMana: 130, element: Element.Light,
     attackName: 'Baile de Escenario Perfecto', attackCost: 0, attackCooldown: 0,
     magicName: 'Brillo de Estrella Celestial', magicCost: 24, magicCooldown: 2,
     skillName: 'Concierto del Domo de Tokio', skillCost: 38, skillCooldown: 3,
@@ -299,13 +299,13 @@ export const cards: Card[] = [
     skillName: 'Loto Carmesí: Cuchilla de Llamas Explosivas', skillCost: 42, skillCooldown: 3,
     ultimateName: 'Puño de Destrucción del Rey Dragón de Fuego', ultimateCost: 72, ultimateCooldown: 5 },
   // l20
-  { id: 'l20', name: 'Izuku Midoriya (100% Full Cowl)', anime: 'My Hero Academia', rarity: Rarity.Legendary, stats: S(86, 68, 56, 22, 130), hp: 252, maxMana: 130, element: Element.Light,
+  { id: 'l20', name: 'Izuku Midoriya', anime: 'My Hero Academia', rarity: Rarity.Legendary, stats: S(86, 68, 56, 22, 130), hp: 252, maxMana: 130, element: Element.Light,
     attackName: 'Texas Smash Definitivo', attackCost: 0, attackCooldown: 0,
     magicName: 'Fa Jin + Quinto Látigo', magicCost: 26, magicCooldown: 2,
     skillName: 'United States of World Smash', skillCost: 42, skillCooldown: 3,
     ultimateName: 'One For All 100%: Shoot Style Overdrive', ultimateCost: 70, ultimateCooldown: 5 },
   // l21
-  { id: 'l21', name: 'Ken Kaneki (Kakuja Dragón)', anime: 'Tokyo Ghoul', rarity: Rarity.Legendary, stats: S(82, 64, 76, 20, 112), hp: 255, maxMana: 130, element: Element.Shadow,
+  { id: 'l21', name: 'Ken Kaneki', anime: 'Tokyo Ghoul', rarity: Rarity.Legendary, stats: S(82, 64, 76, 20, 112), hp: 255, maxMana: 130, element: Element.Shadow,
     attackName: 'Azote de Tentáculos de Ciempiés', attackCost: 0, attackCooldown: 0,
     magicName: 'Devoración de Células RC', magicCost: 28, magicCooldown: 2,
     skillName: 'Ruina de la CCG', skillCost: 44, skillCooldown: 3,

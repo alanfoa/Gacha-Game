@@ -72,6 +72,7 @@ export function LoginScreen() {
       </p>
       <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
         <input
+          autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Tu nombre..."

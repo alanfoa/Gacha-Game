@@ -3,10 +3,25 @@ import { useScreenStore } from '../../store/screenStore';
 import { useGameStore, type CardData } from '../../store/gameStore';
 import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
-import { PlaceholderCard } from '../UI/PlaceholderCard';
+import { AnimeCard, type Card, type Rarity, type El } from '../Card/AnimeCard';
 import { CardModal } from '../UI/CardModal';
 
-const CARD_W = 140;
+const CARD_W = 114;
+
+function toCard(c: import('../../store/gameStore').CardData): Card {
+  return {
+    id: parseInt(c.id) || 0,
+    name: c.name,
+    rarity: c.rarity as Rarity,
+    element: c.element as El,
+    atk: c.stats.attack,
+    def: c.stats.defense,
+    mag: c.stats.magic,
+    spd: c.stats.speed,
+    lck: c.stats.luck,
+    imageId: c.id,
+  };
+}
 const GAP = 12;
 
 export function AlbumScreen() {
@@ -169,11 +184,10 @@ export function AlbumScreen() {
                 boxShadow: isFocused ? `0 0 24px ${owned ? 'rgba(96,165,250,0.5)' : 'rgba(251,191,36,0.4)'}` : 'none',
               }}
             >
-              <PlaceholderCard
-                rarity={card.rarity}
-                name={owned ? card.name : '???'}
-                size={140}
-                cardId={owned ? card.id : undefined}
+              <AnimeCard
+                card={{ ...toCard(card), name: owned ? card.name : '???', imageId: owned ? card.id : undefined }}
+                dimmed={!owned}
+                size="sm"
               />
             </div>
           );
