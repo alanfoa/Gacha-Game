@@ -182,6 +182,8 @@ export const cards: Card[] = [
   { id: 'e20', name: 'Izuku Midoriya', anime: 'My Hero Academia', rarity: Rarity.Epic, stats: S(56, 42, 28, 18, 76), hp: 192, maxMana: 100, element: Element.Light, attackName: 'Delaware Smash', attackCost: 0, attackCooldown: 0, magicName: 'Detroit Smash', magicCost: 24, magicCooldown: 2, skillName: 'One For All 20%', skillCost: 36, skillCooldown: 3 },
   // e21
   { id: 'e21', name: 'Ken Kaneki', anime: 'Tokyo Ghoul', rarity: Rarity.Epic, stats: S(54, 40, 46, 16, 70), hp: 195, maxMana: 100, element: Element.Shadow, attackName: 'Azote de Rize', attackCost: 0, attackCooldown: 0, magicName: 'Ciempiés de Kakuja', magicCost: 26, magicCooldown: 2, skillName: '¿Cuánto es 1000 menos 7?', skillCost: 42, skillCooldown: 3 },
+  // e22
+  { id: 'e22', name: 'Akane Kurokawa', anime: 'Oshi no Ko', rarity: Rarity.Epic, stats: S(65, 50, 85, 95, 75), hp: 190, maxMana: 100, element: Element.Shadow, attackName: 'Análisis de Guion', attackCost: 0, attackCooldown: 0, magicName: 'Perfilado Psicológico', magicCost: 26, magicCooldown: 2, skillName: 'Actuación de Método', skillCost: 40, skillCooldown: 3 },
 
   // ═══ LEGENDARIOS ═══ (ataque + magia + strike + ultimate, mana 130, power ~360-380 total stats)
   // l01
@@ -310,6 +312,12 @@ export const cards: Card[] = [
     magicName: 'Devoración de Células RC', magicCost: 28, magicCooldown: 2,
     skillName: 'Ruina de la CCG', skillCost: 44, skillCooldown: 3,
     ultimateName: 'El Despertar del Dragón: ¿Cuánto es 1000 menos 7?', ultimateCost: 74, ultimateCooldown: 6 },
+  // l22
+  { id: 'l22', name: 'Akane', anime: 'Oshi no Ko', rarity: Rarity.Legendary, stats: S(85, 70, 125, 130, 110), hp: 248, maxMana: 130, element: Element.Shadow,
+    attackName: 'Instinto de Actriz Genial', attackCost: 0, attackCooldown: 0,
+    magicName: 'Mímica Perfecta: Estrella Azul', magicCost: 28, magicCooldown: 2,
+    skillName: 'Simulación Psicológica Extrema', skillCost: 44, skillCooldown: 3,
+    ultimateName: 'Despertar de la Estrella Oscura', ultimateCost: 72, ultimateCooldown: 5 },
 ];
 
 export function getCardsByRarity(rarity: Rarity): Card[] {

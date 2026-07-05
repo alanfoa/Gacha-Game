@@ -82,9 +82,9 @@ export function CardModal({ card, owned, onClose }: Props) {
 
   const rarityLabel = (r: string) => {
     switch (r) {
-      case 'legendary': return { text: 'LEGENDARIO', color: '#facc15' };
-      case 'epic': return { text: 'ÉPICO', color: '#a78bfa' };
-      case 'rare': return { text: 'RARO', color: '#60a5fa' };
+      case 'LEGENDARIO': return { text: 'LEGENDARIO', color: '#facc15' };
+      case 'EPICO': return { text: 'ÉPICO', color: '#a78bfa' };
+      case 'RARO': return { text: 'RARO', color: '#60a5fa' };
       default: return { text: 'COMÚN', color: '#9ca3af' };
     }
   };
