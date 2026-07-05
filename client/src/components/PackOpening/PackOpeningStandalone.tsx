@@ -581,18 +581,21 @@ function OpeningScreen({ pack, onDone }: { pack: Pack; onDone: () => void }) {
   );
 }
 
-function ResultsScreen({ pack, cards, onCardClick, onShop, isFree }: {
-  pack: Pack; cards: Card[]; onCardClick: (c: Card) => void; onShop: () => void; isFree?: boolean;
+function ResultsScreen({ pack, cards, coins, onCardClick, onShop, onReopen, isFree }: {
+  pack: Pack; cards: Card[]; coins: number; onCardClick: (c: Card) => void; onShop: () => void; onReopen: () => void; isFree?: boolean;
 }) {
   const [revealed, setRevealed]   = useState<Set<number>>(new Set());
   const [activeIdx, setActiveIdx] = useState(0);
   const [focusArea, setFocusArea] = useState<"cards" | "shop" | "open">("cards");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmFocus, setConfirmFocus] = useState(0);
   const activeIdxRef              = useRef(0);
   const shopBtnRef                = useRef<HTMLButtonElement>(null);
   const openBtnRef                = useRef<HTMLButtonElement>(null);
   const rar = R[pack.rarity];
   const fan = CARD_FAN[Math.min(cards.length - 1, 6)];
   const allOut = cards.length > 0 && revealed.size === cards.length;
+  const hasOpenBtn = !isFree && coins >= pack.price;
 
   // Keep ref in sync for stable callbacks
   useEffect(() => { activeIdxRef.current = activeIdx; }, [activeIdx]);
@@ -628,8 +631,8 @@ function ResultsScreen({ pack, cards, onCardClick, onShop, isFree }: {
   // Focus active button when focusArea changes
   useEffect(() => {
     if (focusArea === "shop") shopBtnRef.current?.focus();
-    else if (focusArea === "open") openBtnRef.current?.focus();
-  }, [focusArea]);
+    else if (focusArea === "open" && hasOpenBtn) openBtnRef.current?.focus();
+  }, [focusArea, hasOpenBtn]);
 
   const navigate = useCallback((delta: -1 | 1) => {
     setActiveIdx(prev => {
@@ -644,12 +647,13 @@ function ResultsScreen({ pack, cards, onCardClick, onShop, isFree }: {
   useEffect(() => {
     if (!allOut) return;
     const onKey = (e: KeyboardEvent) => {
+      if (confirmOpen) return;
       if (["ArrowLeft","ArrowRight","ArrowDown","ArrowUp","Enter"," ","Escape","b","B"].includes(e.key)) e.preventDefault();
       if (e.key === "Escape" || e.key === "b" || e.key === "B") { SFX.navigate(); onShop(); return; }
       if (focusArea === "cards") {
         if (e.key === "ArrowLeft"  || e.key === "a") { navigate(-1); return; }
         if (e.key === "ArrowRight" || e.key === "d") { navigate(1); return; }
-        if (e.key === "ArrowDown" || e.key === "Tab") { setFocusArea("shop"); SFX.navigate(); return; }
+        if (e.key === "ArrowDown" || e.key === "Tab") { setFocusArea(hasOpenBtn ? "shop" : "shop"); SFX.navigate(); return; }
         if (e.key === "Enter" || e.key === " ") { SFX.cardDetail(); onCardClick(cards[activeIdxRef.current]); return; }
       } else {
         if (e.key === "ArrowLeft" || e.key === "a") {
@@ -657,24 +661,75 @@ function ResultsScreen({ pack, cards, onCardClick, onShop, isFree }: {
           return;
         }
         if (e.key === "ArrowRight" || e.key === "d") {
-          if (focusArea === "shop") { setFocusArea("open"); SFX.navigate(); }
+          if (focusArea === "shop" && hasOpenBtn) { setFocusArea("open"); SFX.navigate(); }
           return;
         }
         if (e.key === "ArrowUp") { setFocusArea("cards"); SFX.navigate(); return; }
         if (e.key === "Enter" || e.key === " ") {
           SFX.cardDetail();
-          onShop();
+          if (focusArea === "open" && hasOpenBtn) { setConfirmOpen(true); }
+          else onShop();
           return;
         }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [allOut, navigate, onCardClick, cards, focusArea, onShop]);
+  }, [allOut, navigate, onCardClick, cards, focusArea, onShop, confirmOpen, hasOpenBtn]);
+
+  // ── Modal keyboard ────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!confirmOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      e.preventDefault();
+      if (e.key === "ArrowLeft" || e.key === "a") { setConfirmFocus(0); SFX.navigate(); }
+      if (e.key === "ArrowRight" || e.key === "d") { setConfirmFocus(1); SFX.navigate(); }
+      if (e.key === "Enter" || e.key === " ") {
+        SFX.confirm();
+        if (confirmFocus === 0) { setConfirmOpen(false); onReopen(); }
+        else setConfirmOpen(false);
+      }
+      if (e.key === "Escape" || e.key === "b" || e.key === "B") { SFX.navigate(); setConfirmOpen(false); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [confirmOpen, confirmFocus, onReopen]);
 
   // ── Gamepad ───────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!allOut) return;
+    let rafId: number;
+    let lastMoveAt = 0;
+    const COOLDOWN = 220;
+    const poll = (t: number) => {
+      if (confirmOpen) { rafId = requestAnimationFrame(poll); return; }
+      const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+      for (const gp of gps) {
+        if (!gp) continue;
+        const left  = gp.buttons[14]?.pressed || (gp.axes[0] ?? 0) < -0.5;
+        const right = gp.buttons[15]?.pressed || (gp.axes[0] ?? 0) >  0.5;
+        if ((left || right) && t - lastMoveAt > COOLDOWN) {
+          if (focusArea === "cards") navigate(left ? -1 : 1);
+          else if (left && focusArea === "open") setFocusArea("shop");
+          else if (right && focusArea === "shop" && hasOpenBtn) setFocusArea("open");
+          lastMoveAt = t;
+        }
+        if (gp.buttons[0]?.pressed) {
+          if (focusArea === "cards") onCardClick(cards[activeIdxRef.current]);
+          else if (focusArea === "open" && hasOpenBtn) { SFX.navigate(); setConfirmOpen(true); }
+          else onShop();
+        }
+        if (gp.buttons[1]?.pressed) { SFX.navigate(); onShop(); return; }
+      }
+      rafId = requestAnimationFrame(poll);
+    };
+    rafId = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(rafId);
+  }, [allOut, navigate, onCardClick, cards, focusArea, onShop, confirmOpen, hasOpenBtn]);
+
+  // ── Modal gamepad ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!confirmOpen) return;
     let rafId: number;
     let lastMoveAt = 0;
     const COOLDOWN = 220;
@@ -685,22 +740,23 @@ function ResultsScreen({ pack, cards, onCardClick, onShop, isFree }: {
         const left  = gp.buttons[14]?.pressed || (gp.axes[0] ?? 0) < -0.5;
         const right = gp.buttons[15]?.pressed || (gp.axes[0] ?? 0) >  0.5;
         if ((left || right) && t - lastMoveAt > COOLDOWN) {
-          if (focusArea === "cards") navigate(left ? -1 : 1);
-          else if (left && focusArea === "open") setFocusArea("shop");
-          else if (right && focusArea === "shop") setFocusArea("open");
+          if (left) setConfirmFocus(0);
+          else setConfirmFocus(1);
+          SFX.navigate();
           lastMoveAt = t;
         }
         if (gp.buttons[0]?.pressed) {
-          if (focusArea === "cards") onCardClick(cards[activeIdxRef.current]);
-          else onShop();
+          SFX.confirm();
+          if (confirmFocus === 0) { setConfirmOpen(false); onReopen(); }
+          else setConfirmOpen(false);
         }
-        if (gp.buttons[1]?.pressed) { SFX.navigate(); onShop(); return; }
+        if (gp.buttons[1]?.pressed) { SFX.navigate(); setConfirmOpen(false); }
       }
       rafId = requestAnimationFrame(poll);
     };
     rafId = requestAnimationFrame(poll);
     return () => cancelAnimationFrame(rafId);
-  }, [allOut, navigate, onCardClick, cards, focusArea, onShop]);
+  }, [confirmOpen, confirmFocus, onReopen]);
 
   return (
     <div className="w-full h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ background:"#011367" }}>
@@ -834,8 +890,8 @@ function ResultsScreen({ pack, cards, onCardClick, onShop, isFree }: {
               }}>
               {isFree ? "← MISIONES" : "← TIENDA"}
             </button>
-            {!isFree && (
-            <button ref={openBtnRef} onClick={onShop}
+            {hasOpenBtn && (
+            <button ref={openBtnRef} onClick={() => { SFX.navigate(); setConfirmOpen(true); }}
               className="px-5 py-2.5 rounded-xl font-black text-sm tracking-wider hover:brightness-115 transition-all"
               style={{
                 fontFamily:"Rajdhani, sans-serif", letterSpacing:2, outline:"none",
@@ -846,6 +902,66 @@ function ResultsScreen({ pack, cards, onCardClick, onShop, isFree }: {
               ABRIR OTRO SOBRE
             </button>
             )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Confirm modal */}
+      <AnimatePresence>
+        {confirmOpen && (
+          <motion.div
+            className="absolute inset-0 z-[100] flex items-center justify-center"
+            style={{ background:"rgba(0,0,0,0.6)", backdropFilter:"blur(4px)" }}
+            initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
+            onClick={() => { SFX.navigate(); setConfirmOpen(false); }}
+          >
+            <motion.div
+              style={{
+                background:"#011367", border:"1px solid rgba(255,255,255,0.15)",
+                borderRadius:12, padding:"32px 36px", maxWidth:380, width:"90%", textAlign:"center",
+              }}
+              initial={{ scale:0.9, opacity:0 }} animate={{ scale:1, opacity:1 }}
+              exit={{ scale:0.9, opacity:0 }}
+              transition={{ type:"spring", stiffness:400, damping:30 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ fontFamily:"'Barlow Condensed', sans-serif", fontWeight:800, fontSize:"1.6rem", color:"#fff", marginBottom:8 }}>
+                ¿ABRIR OTRO SOBRE?
+              </div>
+              <div style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"0.95rem", color:"rgba(255,255,255,0.5)", marginBottom:20, letterSpacing:0.5 }}>
+                Tienes <span style={{ color:"#f59e0b", fontWeight:700 }}>¥{coins.toLocaleString()}</span>
+                <span style={{ margin:"0 6px", color:"rgba(255,255,255,0.15)" }}>·</span>
+                Precio <span style={{ color:"#f59e0b", fontWeight:700 }}>¥{pack.price.toLocaleString()}</span>
+              </div>
+              <div style={{ display:"flex", gap:12, justifyContent:"center" }}>
+                <motion.button
+                  onClick={() => { SFX.confirm(); setConfirmOpen(false); onReopen(); }}
+                  whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
+                  style={{
+                    padding:"10px 32px", borderRadius:8, outline:"none", cursor:"pointer",
+                    border:`2px solid ${confirmFocus === 0 ? "#3b82f6" : "rgba(255,255,255,0.15)"}`,
+                    background: confirmFocus === 0 ? "#3b82f6" : "transparent",
+                    color:"#fff", fontFamily:"'Barlow Condensed', sans-serif",
+                    fontWeight:700, fontSize:"1.1rem",
+                  }}
+                >
+                  SÍ
+                </motion.button>
+                <motion.button
+                  onClick={() => { SFX.navigate(); setConfirmOpen(false); }}
+                  whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
+                  style={{
+                    padding:"10px 32px", borderRadius:8, outline:"none", cursor:"pointer",
+                    border:`2px solid ${confirmFocus === 1 ? "#ef4444" : "rgba(255,255,255,0.15)"}`,
+                    background: confirmFocus === 1 ? "#ef4444" : "transparent",
+                    color:"#fff", fontFamily:"'Barlow Condensed', sans-serif",
+                    fontWeight:700, fontSize:"1.1rem",
+                  }}
+                >
+                  NO
+                </motion.button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1046,6 +1162,11 @@ export function PackOpeningStandalone() {
     setScreen("shop");
   }, [navigate]);
 
+  const reopenPack = useCallback(() => {
+    if (!pack) return;
+    goSelect(pack, false);
+  }, [pack, goSelect]);
+
   useEffect(() => {
     if (screen !== "shop") return;
     const onKey = (e: KeyboardEvent) => {
@@ -1117,7 +1238,7 @@ export function PackOpeningStandalone() {
         )}
         {screen === "results" && pack && (
           <motion.div key="results" className="w-full h-full" initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }} exit={{ opacity:0 }} transition={{ duration:0.36 }}>
-            <ResultsScreen pack={pack} cards={cards} onCardClick={goDetail} onShop={goShop} isFree={isFree.current}/>
+            <ResultsScreen pack={pack} cards={cards} coins={coins} onCardClick={goDetail} onShop={goShop} onReopen={reopenPack} isFree={isFree.current}/>
           </motion.div>
         )}
         {screen === "detail" && detail && (
