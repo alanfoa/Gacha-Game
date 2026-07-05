@@ -366,11 +366,32 @@ function AnticipationScreen({ pack, onOpen }: { pack: Pack; onOpen: () => void }
     const t = [
       setTimeout(() => setPhase(1), 700),
       setTimeout(() => { setPhase(2); SFX.crack(); }, 2000),
-      // crack animation finishes ~1.4s after phase 2 starts, then auto-open
       setTimeout(() => onOpen(), 3600),
     ];
     return () => t.forEach(clearTimeout);
   }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); SFX.navigate(); onOpen(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onOpen]);
+
+  useEffect(() => {
+    let rafId: number;
+    const poll = () => {
+      const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+      for (const gp of gps) {
+        if (!gp) continue;
+        if (gp.buttons[0]?.pressed) { SFX.navigate(); onOpen(); }
+      }
+      rafId = requestAnimationFrame(poll);
+    };
+    rafId = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(rafId);
+  }, [onOpen]);
 
   const CRACK_LINES = [
     { x2: 145, y2: 128 }, { x2: 856, y2: 102 },
@@ -446,6 +467,28 @@ function OpeningScreen({ pack, onDone }: { pack: Pack; onDone: () => void }) {
     ];
     return () => t.forEach(clearTimeout);
   }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); SFX.navigate(); onDone(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onDone]);
+
+  useEffect(() => {
+    let rafId: number;
+    const poll = () => {
+      const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+      for (const gp of gps) {
+        if (!gp) continue;
+        if (gp.buttons[0]?.pressed) { SFX.navigate(); onDone(); }
+      }
+      rafId = requestAnimationFrame(poll);
+    };
+    rafId = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(rafId);
+  }, [onDone]);
 
   const particles = Array.from({ length: 44 }, (_, i) => {
     const angle = (i / 44) * Math.PI * 2 + (i % 5) * 0.14;
