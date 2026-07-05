@@ -11,22 +11,7 @@ type Screen = "shop" | "anticipation" | "opening" | "results" | "detail";
 
 interface Pack { id: string; name: string; count: number; price: number; rarity: Rarity; }
 
-const PACKS: Pack[] = [
-  { id: "basico",     name: "BÁSICO",     count: 1, price: 100,  rarity: "COMUN"     },
-  { id: "deluxe",     name: "DELUXE",     count: 3, price: 300,  rarity: "RARO"      },
-  { id: "premium",    name: "PREMIUM",    count: 5, price: 600,  rarity: "EPICO"     },
-  { id: "legendario", name: "LEGENDARIO", count: 7, price: 1000, rarity: "LEGENDARIO"},
-];
 
-const CARDS: Card[] = [
-  { id: 1, name: "Ryuken Kage",      rarity: "LEGENDARIO", element: "FUEGO",  atk: 98, def: 45, mag: 72, spd: 88, lck: 65 },
-  { id: 2, name: "Mira Celestia",    rarity: "EPICO",      element: "LUZ",    atk: 55, def: 70, mag: 95, spd: 62, lck: 78 },
-  { id: 3, name: "Zeth Ironbane",    rarity: "RARO",       element: "TIERRA", atk: 75, def: 88, mag: 30, spd: 45, lck: 55 },
-  { id: 4, name: "Nyx Shadowborn",   rarity: "RARO",       element: "SOMBRA", atk: 70, def: 50, mag: 80, spd: 75, lck: 40 },
-  { id: 5, name: "Aqua Seraphim",    rarity: "COMUN",      element: "AGUA",   atk: 40, def: 60, mag: 55, spd: 70, lck: 50 },
-  { id: 6, name: "Stormcaller Vex",  rarity: "EPICO",      element: "VIENTO", atk: 65, def: 42, mag: 85, spd: 92, lck: 60 },
-  { id: 7, name: "Terra Golem",      rarity: "COMUN",      element: "TIERRA", atk: 55, def: 95, mag: 20, spd: 25, lck: 45 },
-];
 
 // ─── Adapters (API → display) ───────────────────────────────────────────────
 
@@ -909,7 +894,7 @@ function ResultsScreen({ pack, cards, coins, onCardClick, onShop, onReopen, isFr
               ‹
             </button>
 
-            {cards.map((c, i) => (
+            {cards.map((_, i) => (
               <motion.div key={i} onClick={() => setActiveIdx(i)} className="cursor-pointer rounded-full"
                 style={{ height:5, background: i===activeIdx ? R[cards[activeIdx].rarity].color : "rgba(255,255,255,0.2)" }}
                 animate={{ width: i===activeIdx ? 26 : 5, opacity: i===activeIdx ? 1 : 0.55 }}
@@ -1139,9 +1124,9 @@ export function PackOpeningStandalone() {
   const [cards, setCards] = useState<Card[]>([]);
   const [detail, setDetail] = useState<Card | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
 
-  const { user, packTypes, allCards, openPack, loading: storeLoading, error: storeError } = useGameStore();
+  const { user, packTypes, openPack, loading: storeLoading, error: storeError } = useGameStore();
   const navigate = useScreenStore((s) => s.navigate);
   const screenParams = useScreenStore((s) => s.screenParams);
   const autoOpenedRef = useRef(false);
@@ -1149,8 +1134,6 @@ export function PackOpeningStandalone() {
 
   const coins = user?.coins ?? 0;
   const packs: Pack[] = packTypes.map(packTypeToDisplay);
-  const allDisplayCards: Card[] = allCards.map(cardDataToDisplay);
-
   // Auto-open free pack from missions
   useEffect(() => {
     if (screenParams?.freePack && packs.length > 0 && !autoOpenedRef.current) {
