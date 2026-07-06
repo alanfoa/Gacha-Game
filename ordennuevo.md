@@ -62,7 +62,7 @@ Ronda N: regen maná + efectos → ordenar por speed
 
 ### Balance — `battle.ts`
 
-- [ ] Poder fijo por rareza en `generateSkills`:
+- [x] Poder fijo por rareza en `generateSkills`:
 
 | Rareza | ATTACK | MAGIC | SKILL | ULTIMATE |
 |--------|--------|-------|-------|----------|
