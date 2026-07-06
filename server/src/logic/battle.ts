@@ -1,8 +1,6 @@
 import { cards, getElementMultiplier, RARITY_ORDER, type Card, type Element, type Rarity } from '../data/cards.js';
 
 const REWARD_COINS = [30, 60, 100, 200];
-const RARITY_POWER_MULT: Record<Rarity, number> = { COMUN: 0.8, RARO: 1.0, EPICO: 1.3, LEGENDARIO: 1.7 };
-
 export type ActionType = 'ATTACK' | 'MAGIC' | 'DEFEND' | 'SKILL';
 
 export type StatusEffectType =
@@ -117,13 +115,20 @@ function getSkillEffect(cardId: string, skillType: 'strike' | 'ultimate'): Skill
   return skillType === 'strike' ? entry.strike : entry.ultimate;
 }
 
+const POWER_TABLE: Record<Rarity, { ATTACK: number; MAGIC: number; SKILL: number; ULTIMATE: number }> = {
+  COMUN: { ATTACK: 55, MAGIC: 50, SKILL: 80, ULTIMATE: 120 },
+  RARO: { ATTACK: 65, MAGIC: 60, SKILL: 95, ULTIMATE: 140 },
+  EPICO: { ATTACK: 75, MAGIC: 70, SKILL: 110, ULTIMATE: 165 },
+  LEGENDARIO: { ATTACK: 90, MAGIC: 85, SKILL: 130, ULTIMATE: 200 },
+};
+
 function generateSkills(card: Card): Skill[] {
-  const rm = RARITY_POWER_MULT[card.rarity];
+  const pt = POWER_TABLE[card.rarity];
 
   const skills: Skill[] = [
     {
       id: `atk_${card.id}`, name: card.attackName, type: 'ATTACK',
-      power: Math.round(card.stats.attack * 2.0 * rm + 20),
+      power: pt.ATTACK,
       cost: card.attackCost, cooldown: card.attackCooldown, currentCooldown: 0,
       description: 'Ataque físico',
     },
@@ -132,7 +137,7 @@ function generateSkills(card: Card): Skill[] {
   if (card.magicName) {
     skills.push({
       id: `mag_${card.id}`, name: card.magicName, type: 'MAGIC',
-      power: Math.round(card.stats.magic * 2.0 * rm + 20),
+      power: pt.MAGIC,
       cost: card.magicCost ?? 20, cooldown: card.magicCooldown ?? 1, currentCooldown: 0,
       description: 'Ataque mágico',
     });
@@ -141,7 +146,7 @@ function generateSkills(card: Card): Skill[] {
     const strikeEffect = getSkillEffect(card.id, 'strike');
     skills.push({
       id: `skill_${card.id}`, name: card.skillName, type: 'SKILL',
-      power: Math.round((card.stats.attack + card.stats.magic) * 0.8 * rm + 20),
+      power: pt.SKILL,
       cost: card.skillCost ?? 35, cooldown: card.skillCooldown ?? 2, currentCooldown: 0,
       description: `Golpe ${card.element}`, effect: strikeEffect,
     });
@@ -150,7 +155,7 @@ function generateSkills(card: Card): Skill[] {
     const ultEffect = getSkillEffect(card.id, 'ultimate');
     skills.push({
       id: `ult_${card.id}`, name: card.ultimateName, type: 'SKILL',
-      power: Math.round(card.stats.attack * 3.0 * rm + 20),
+      power: pt.ULTIMATE,
       cost: card.ultimateCost ?? 65, cooldown: card.ultimateCooldown ?? 4, currentCooldown: 0,
       description: 'Poder definitivo', effect: ultEffect,
     });
