@@ -1,6 +1,7 @@
 import { cards, getElementMultiplier, RARITY_ORDER, type Card, type Element, type Rarity } from '../data/cards.js';
 
 const REWARD_COINS = [30, 60, 100, 200];
+const RARITY_POWER_MULT: Record<Rarity, number> = { COMUN: 0.8, RARO: 1.0, EPICO: 1.3, LEGENDARIO: 1.7 };
 
 export type ActionType = 'ATTACK' | 'MAGIC' | 'DEFEND' | 'SKILL';
 
@@ -117,13 +118,21 @@ function getSkillEffect(cardId: string, skillType: 'strike' | 'ultimate'): Skill
 }
 
 function generateSkills(card: Card): Skill[] {
+  const rm = RARITY_POWER_MULT[card.rarity];
+
   const skills: Skill[] = [
-    { id: `atk_${card.id}`, name: card.attackName, type: 'ATTACK', power: 80, cost: card.attackCost, cooldown: card.attackCooldown, currentCooldown: 0, description: 'Ataque físico' },
+    {
+      id: `atk_${card.id}`, name: card.attackName, type: 'ATTACK',
+      power: Math.round(card.stats.attack * 2.0 * rm + 20),
+      cost: card.attackCost, cooldown: card.attackCooldown, currentCooldown: 0,
+      description: 'Ataque físico',
+    },
   ];
 
   if (card.magicName) {
     skills.push({
-      id: `mag_${card.id}`, name: card.magicName, type: 'MAGIC', power: 75,
+      id: `mag_${card.id}`, name: card.magicName, type: 'MAGIC',
+      power: Math.round(card.stats.magic * 2.0 * rm + 20),
       cost: card.magicCost ?? 20, cooldown: card.magicCooldown ?? 1, currentCooldown: 0,
       description: 'Ataque mágico',
     });
@@ -131,7 +140,8 @@ function generateSkills(card: Card): Skill[] {
   if (card.skillName) {
     const strikeEffect = getSkillEffect(card.id, 'strike');
     skills.push({
-      id: `skill_${card.id}`, name: card.skillName, type: 'SKILL', power: 120,
+      id: `skill_${card.id}`, name: card.skillName, type: 'SKILL',
+      power: Math.round((card.stats.attack + card.stats.magic) * 0.8 * rm + 20),
       cost: card.skillCost ?? 35, cooldown: card.skillCooldown ?? 2, currentCooldown: 0,
       description: `Golpe ${card.element}`, effect: strikeEffect,
     });
@@ -139,7 +149,8 @@ function generateSkills(card: Card): Skill[] {
   if (card.ultimateName) {
     const ultEffect = getSkillEffect(card.id, 'ultimate');
     skills.push({
-      id: `ult_${card.id}`, name: card.ultimateName, type: 'SKILL', power: 180,
+      id: `ult_${card.id}`, name: card.ultimateName, type: 'SKILL',
+      power: Math.round(card.stats.attack * 3.0 * rm + 20),
       cost: card.ultimateCost ?? 65, cooldown: card.ultimateCooldown ?? 4, currentCooldown: 0,
       description: 'Poder definitivo', effect: ultEffect,
     });
@@ -151,7 +162,7 @@ function generateSkills(card: Card): Skill[] {
 function calcDamageNew(atk: number, power: number, def: number, elementMult: number, luck: number): { damage: number; critical: boolean } {
   const base = (atk * power / 100) * (100 / (100 + def));
   const crit = Math.random() * 100 < luck;
-  const critMult = crit ? 1.5 : 1;
+  const critMult = crit ? (1.5 + luck / 200) : 1;
   return { damage: Math.max(1, Math.round(base * elementMult * critMult)), critical: crit };
 }
 
@@ -165,18 +176,37 @@ function generateEnemyActions(
   for (const ec of enemies) {
     if (ec.currentHp <= 0 || ec.skipNextTurn) continue;
 
-    const target = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+    const sorted = [...alivePlayers].sort((a, b) => a.currentHp - b.currentHp);
+    const lowTarget = sorted[0];
+    const avoidOverkill = lowTarget && lowTarget.currentHp < lowTarget.maxHp * 0.2 && sorted.length > 1;
+    const target = !lowTarget ? null
+      : avoidOverkill
+        ? sorted[1]
+        : (Math.random() < 0.7 ? lowTarget : sorted[Math.floor(Math.random() * sorted.length)]);
     if (!target) continue;
 
-    const roll = Math.random();
-    if (roll < 0.6) {
-      actions.push({ cardId: ec.cardId, action: 'ATTACK', targetId: target.cardId });
-    } else if (roll < 0.9 && ec.skills.length > 2) {
-      const skill = ec.skills[Math.floor(Math.random() * (ec.skills.length - 1)) + 1];
-      actions.push({ cardId: ec.cardId, action: 'SKILL', targetId: target.cardId, skillId: skill.id });
-    } else {
+    const hpPercent = ec.currentHp / ec.maxHp;
+    if (hpPercent < 0.3 && Math.random() < 0.5) {
       actions.push({ cardId: ec.cardId, action: 'DEFEND', targetId: ec.cardId });
+      continue;
     }
+
+    const ultSkill = ec.skills.find(s => s.id.startsWith('ult_'));
+    if (ultSkill && ec.currentMana >= ultSkill.cost && ultSkill.currentCooldown === 0 && Math.random() < 0.4) {
+      actions.push({ cardId: ec.cardId, action: 'SKILL', targetId: target.cardId, skillId: ultSkill.id });
+      continue;
+    }
+
+    const usable = ec.skills.filter(s =>
+      s.id.startsWith('mag_') || s.id.startsWith('skill_')
+    ).filter(s => ec.currentMana >= s.cost && s.currentCooldown === 0);
+    if (usable.length > 0 && Math.random() < 0.6) {
+      const skill = usable[Math.floor(Math.random() * usable.length)];
+      actions.push({ cardId: ec.cardId, action: skill.type, targetId: target.cardId, skillId: skill.id });
+      continue;
+    }
+
+    actions.push({ cardId: ec.cardId, action: 'ATTACK', targetId: target.cardId });
   }
 
   return actions;
@@ -189,17 +219,22 @@ function applyDamageToCard(
   isDefending: boolean,
   luck: number,
   atkStat: number,
+  isMagic: boolean,
+  speedDiff: number,
 ): { damage: number; critical: boolean } {
   const effectiveDef = target.statusEffects.some((e) => e.type === 'DEF_DOWN')
     ? target.stats.defense * (1 - (target.statusEffects.find((e) => e.type === 'DEF_DOWN')!.value / 100))
     : target.stats.defense;
   const defMult = isDefending ? 0.5 : 1;
-  const { damage, critical } = calcDamageNew(atkStat, skill.power, effectiveDef * defMult, elementMult, luck);
+  const finalDef = isMagic ? Math.round(effectiveDef * 0.5 + target.stats.magic * 0.5) : effectiveDef;
+  const { damage, critical } = calcDamageNew(atkStat, skill.power, finalDef * defMult, elementMult, luck);
+  const speedMult = speedDiff > 0 ? 1 + Math.min(0.25, speedDiff / 500) : 1;
+  const finalDamage = Math.round(damage * speedMult);
 
-  target.currentHp -= damage;
+  target.currentHp -= finalDamage;
   clampHp(target);
 
-  return { damage, critical };
+  return { damage: finalDamage, critical };
 }
 
 function applySkillEffect(
@@ -488,7 +523,10 @@ export function processTurn(
 
     if (pending.actionType === 'DEFEND') {
       pending.card.isDefending = true;
-      logs.push(logEntry(pending.card, pending.card, 'DEFEND', 0, false, `${pending.card.name} se defiende`));
+      const healAmt = Math.round(pending.card.stats.defense * 0.5);
+      pending.card.currentHp = Math.min(pending.card.maxHp, pending.card.currentHp + healAmt);
+      pending.card.skills.forEach(s => { s.currentCooldown = Math.max(0, s.currentCooldown - 1); });
+      logs.push(logEntry(pending.card, pending.card, 'DEFEND', 0, false, `${pending.card.name} se defiende y recupera ${healAmt} HP`));
       continue;
     }
 
@@ -506,8 +544,10 @@ export function processTurn(
 
       if (healTarget) {
         const elementMult = skill.type === 'SKILL' ? getElementMultiplier(pending.card.element, pending.target.element) : 1;
-        const atkStat = skill.type === 'MAGIC' ? pending.card.stats.magic : pending.card.stats.attack;
-        const { damage } = applyDamageToCard(pending.target, skill, elementMult, pending.target.isDefending, pending.card.stats.luck, atkStat);
+        const isMagic = skill.type === 'MAGIC';
+        const atkStat = isMagic ? pending.card.stats.magic : pending.card.stats.attack;
+        const speedDiff = pending.card.stats.speed - pending.target.stats.speed;
+        const { damage } = applyDamageToCard(pending.target, skill, elementMult, pending.target.isDefending, pending.card.stats.luck, atkStat, isMagic, speedDiff);
         const healAmt = Math.round(damage * 0.4);
         healTarget.currentHp = Math.min(healTarget.currentHp + healAmt, healTarget.maxHp);
         logs.push(logEntry(pending.card, pending.target, 'SKILL', damage, false, `${pending.card.name} usa ${skill.name} → ${pending.target.name}: -${damage}, ${healTarget.name} recupera ${healAmt}`, skill.id));
@@ -522,14 +562,17 @@ export function processTurn(
       effectiveLuck += skill.effect.value ?? 15;
     }
 
+    const isMagic = skill.type === 'MAGIC';
+    const atkStat = isMagic ? pending.card.stats.magic : pending.card.stats.attack;
+    const speedDiff = pending.card.stats.speed - pending.target.stats.speed;
+
     // IGNORE_DEF: skip portion of DEF
     if (skill.effect?.type === 'IGNORE_DEF') {
       const elementMult = skill.type === 'SKILL' ? getElementMultiplier(pending.card.element, pending.target.element) : 1;
-      const atkStat = skill.type === 'MAGIC' ? pending.card.stats.magic : pending.card.stats.attack;
       const reducedDef = pending.target.stats.defense * (1 - (skill.effect.value ?? 20) / 100);
       const originalDef = pending.target.stats.defense;
       pending.target.stats.defense = reducedDef;
-      const { damage, critical } = applyDamageToCard(pending.target, skill, elementMult, pending.target.isDefending, effectiveLuck, atkStat);
+      const { damage, critical } = applyDamageToCard(pending.target, skill, elementMult, pending.target.isDefending, effectiveLuck, atkStat, isMagic, speedDiff);
       pending.target.stats.defense = originalDef;
       logs.push(logEntry(pending.card, pending.target, skill.type, damage, critical, `${pending.card.name} usa ${skill.name} → ${pending.target.name}: -${damage}${critical ? ' ¡CRÍTICO!' : ''}`, skill.id));
       applySkillEffect(pending.card, pending.target, skill, logs);
@@ -539,10 +582,9 @@ export function processTurn(
     // IGNORE_ALL_DEF: ignore 100% DEF
     if (skill.effect?.type === 'IGNORE_ALL_DEF') {
       const elementMult = skill.type === 'SKILL' ? getElementMultiplier(pending.card.element, pending.target.element) : 1;
-      const atkStat = skill.type === 'MAGIC' ? pending.card.stats.magic : pending.card.stats.attack;
       const originalDef = pending.target.stats.defense;
       pending.target.stats.defense = 0;
-      const { damage, critical } = applyDamageToCard(pending.target, skill, elementMult, false, effectiveLuck, atkStat);
+      const { damage, critical } = applyDamageToCard(pending.target, skill, elementMult, false, effectiveLuck, atkStat, isMagic, speedDiff);
       pending.target.stats.defense = originalDef;
       logs.push(logEntry(pending.card, pending.target, skill.type, damage, critical, `${pending.card.name} usa ${skill.name} → ${pending.target.name}: -${damage}${critical ? ' ¡CRÍTICO!' : ''}`, skill.id));
       applySkillEffect(pending.card, pending.target, skill, logs);
@@ -551,8 +593,7 @@ export function processTurn(
 
     // Normal attack
     const elementMult = skill.type === 'SKILL' ? getElementMultiplier(pending.card.element, pending.target.element) : 1;
-    const atkStat = skill.type === 'MAGIC' ? pending.card.stats.magic : pending.card.stats.attack;
-    const { damage, critical } = applyDamageToCard(pending.target, skill, elementMult, pending.target.isDefending, effectiveLuck, atkStat);
+    const { damage, critical } = applyDamageToCard(pending.target, skill, elementMult, pending.target.isDefending, effectiveLuck, atkStat, isMagic, speedDiff);
     logs.push(logEntry(pending.card, pending.target, skill.type, damage, critical, `${pending.card.name} usa ${skill.name} → ${pending.target.name}: -${damage}${critical ? ' ¡CRÍTICO!' : ''}`, skill.id));
     applySkillEffect(pending.card, pending.target, skill, logs);
   }

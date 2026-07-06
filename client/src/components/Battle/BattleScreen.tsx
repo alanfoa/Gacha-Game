@@ -123,6 +123,15 @@ export function BattleScreen() {
     return result;
   }, [currentCard]);
 
+  const damageEstimates = useMemo(() => {
+    if (!currentCard || !selectedAction) return {};
+    const estimates: Record<string, number> = {};
+    for (const target of aliveEnemyCards) {
+      estimates[target.cardId] = estimateDamage(currentCard, target, selectedAction, selectedSkill ?? undefined);
+    }
+    return estimates;
+  }, [currentCard, selectedAction, selectedSkill, aliveEnemyCards]);
+
   // --- Click handlers ---
   function handleActionSelect(value: string) {
     if (!currentCard) return;
@@ -698,7 +707,7 @@ export function BattleScreen() {
                   transition: 'border-color 0.3s, background 0.3s',
                 }}
               >
-                {entry.message}
+                {actionEmoji(entry.action, entry.critical)} {entry.message}
               </div>
             );
           })()
@@ -794,11 +803,27 @@ export function BattleScreen() {
               onSelect={handleTargetSelect}
               onFocusChange={(i) => setTargetFocus(i)}
               onBack={() => { setSelectedAction(null); setSelectedSkill(null); play('back'); }}
+              damageMap={damageEstimates}
             />
           )}
-          {(phase === 'resolving' || phase === 'player_turn' && !currentCard) && (
+          {phase === 'resolving' && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', padding: '1rem', color: '#9ca3af', fontSize: '0.875rem' }}>
+              <span>RESOLVIENDO...</span>
+              <button
+                onClick={() => setSkipAnim(true)}
+                style={{
+                  background: '#3b82f6', border: 'none', borderRadius: '4px',
+                  color: '#fff', padding: '0.3rem 0.75rem', fontSize: '0.75rem',
+                  fontWeight: 700, cursor: 'pointer', letterSpacing: '0.05em',
+                }}
+              >
+                SALTAR ▶
+              </button>
+            </div>
+          )}
+          {phase === 'player_turn' && !currentCard && (
             <div style={{ textAlign: 'center', padding: '1rem', color: '#9ca3af', fontSize: '0.875rem' }}>
-              {battleWinner ? 'BATALLA FINALIZADA' : 'RESOLVIENDO...'}
+              ESPERANDO...
             </div>
           )}
         </div>
@@ -892,6 +917,57 @@ export function BattleScreen() {
       )}
     </div>
   );
+}
+
+const ELEMENT_CHART: Record<string, { strong: string; weak: string }> = {
+  FUEGO: { strong: 'VIENTO', weak: 'AGUA' },
+  AGUA: { strong: 'FUEGO', weak: 'TIERRA' },
+  TIERRA: { strong: 'AGUA', weak: 'VIENTO' },
+  VIENTO: { strong: 'TIERRA', weak: 'FUEGO' },
+  LUZ: { strong: 'SOMBRA', weak: 'SOMBRA' },
+  SOMBRA: { strong: 'LUZ', weak: 'LUZ' },
+};
+
+function elementMult(atk: string, def: string): number {
+  if (atk === def) return 1;
+  const chart = ELEMENT_CHART[atk];
+  if (!chart) return 1;
+  if (chart.strong === def) return 1.5;
+  if (chart.weak === def) return 0.5;
+  return 1;
+}
+
+function estimateDamage(attacker: BattleCardState, target: BattleCardState, action: string, skillId?: string): number {
+  const skill = skillId
+    ? attacker.skills.find(s => s.id === skillId)
+    : action === 'MAGIC'
+      ? attacker.skills.find(s => s.type === 'MAGIC')
+      : attacker.skills[0];
+  if (!skill) return 0;
+
+  const isMagic = skill.type === 'MAGIC';
+  const atkStat = isMagic ? attacker.stats.magic : attacker.stats.attack;
+  const def = isMagic
+    ? Math.round(target.stats.defense * 0.5 + target.stats.magic * 0.5)
+    : target.stats.defense;
+
+  const em = skill.type === 'SKILL' ? elementMult(attacker.element, target.element) : 1;
+
+  const base = (atkStat * skill.power / 100) * (100 / (100 + def));
+  const avgCrit = 1 + (attacker.stats.luck / 100) * (0.5 + attacker.stats.luck / 200);
+
+  return Math.max(1, Math.round(base * em * avgCrit));
+}
+
+function actionEmoji(action: string, critical: boolean): string {
+  if (critical) return '💥';
+  switch (action) {
+    case 'ATTACK': return '⚔️';
+    case 'MAGIC': return '✨';
+    case 'SKILL': return '🌟';
+    case 'DEFEND': return '🛡️';
+    default: return '';
+  }
 }
 
 function battleToCard(c: BattleCardState): Card {
@@ -1072,7 +1148,7 @@ function ActionMenu({ options, focus, onSelect, onFocusChange, sublabels }: { op
   );
 }
 
-function TargetMenu({ targets, focus, label, onSelect, onFocusChange, onBack }: { targets: BattleCardState[]; focus: number; label: string; onSelect?: (targetId: string) => void; onFocusChange?: (i: number) => void; onBack?: () => void }) {
+function TargetMenu({ targets, focus, label, onSelect, onFocusChange, onBack, damageMap }: { targets: BattleCardState[]; focus: number; label: string; onSelect?: (targetId: string) => void; onFocusChange?: (i: number) => void; onBack?: () => void; damageMap?: Record<string, number> }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'center', gap: '0.75rem',
@@ -1086,6 +1162,7 @@ function TargetMenu({ targets, focus, label, onSelect, onFocusChange, onBack }: 
         </span>
         {targets.map((target, i) => {
           const active = i === focus;
+          const dmg = damageMap?.[target.cardId];
           return (
             <div
               key={target.cardId}
@@ -1106,7 +1183,12 @@ function TargetMenu({ targets, focus, label, onSelect, onFocusChange, onBack }: 
                 transform: active ? 'scale(1.05)' : 'scale(1)',
               }}
             >
-              {target.name}
+              <div>{target.name}</div>
+              {dmg !== undefined && (
+                <div style={{ fontSize: '0.65rem', color: '#fbbf24', fontWeight: 700, marginTop: '0.15rem' }}>
+                  ~{dmg} DMG
+                </div>
+              )}
             </div>
           );
         })}
