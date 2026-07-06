@@ -111,7 +111,7 @@ A medida que se completen los módulos, marcar con [x] para el tilde verde.
 ## 🖼️ FASE 7: Reemplazo de Assets (Al Final)
 
 - [x] **7.1. Imágenes de Personajes Reales**
-- [ ] **7.2. Sonidos Reales**
+- [x] **7.2. Sonidos Reales**
 - [x] **7.3. Música de Fondo (BGM)**
   - "Color Your Night" (Persona 3 Reload) en loop con Howler.js desde `/audio/bgm.ogg`.
 
@@ -119,8 +119,8 @@ A medida que se completen los módulos, marcar con [x] para el tilde verde.
 
 ## 🧩 FASE 8 (Opcional): Features Extra
 
-- [ ] **8.1. Misiones Diarias**
-- [ ] **8.2. Efecto de Sonido Dinámico**
+- [x] **8.1. Misiones Diarias**
+- [ ] **8.2. Efecto de Sonido Dinámico** — SFX que cambian según contexto (ej: música más intensa en batalla, tono distinto en tienda vs menú, variación de pitch en apertura de sobre según rareza)
 
 ---
 
@@ -232,9 +232,9 @@ A medida que se completen los módulos, marcar con [x] para el tilde verde.
   - Coins se actualizan en servidor inmediatamente; perfil se refresca al finalizar.
   - Sin experiencia aún (futuro).
 
-- [ ] **11.8. Integración con Gacha**
+- [x] **11.8. Integración con Gacha**
   - [x] Batallas ganadas dan coins (para comprar sobres).
-  - [ ] Misiones diarias: "Ganá 3 batallas" → recompensa de sobre gratis.
+  - [x] Misiones diarias: "Ganá 3 batallas" → recompensa de sobre gratis.
   - [ ] Conexión con sistema de logros.
 
 ---
