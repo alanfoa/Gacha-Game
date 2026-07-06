@@ -6,7 +6,7 @@ import { useInputManager, type GameAction } from '../../hooks/useInputManager';
 import { useSound } from '../../hooks/useSound';
 import { BGM } from '../../audio/sounds';
 import { AnimeCard, type Card, type Rarity, type El } from '../Card/AnimeCard';
-import { WalletWidget } from '../UI/WalletWidget';
+
 
 type Phase = 'player_turn' | 'resolving' | 'result';
 
@@ -32,6 +32,8 @@ export function BattleScreen() {
   const [surrenderFocus, setSurrenderFocus] = useState(0);
   const [flashOpacity, setFlashOpacity] = useState(0);
   const [flashColor, setFlashColor] = useState('rgba(251,191,36,0.4)');
+  const [localPlayerHp, setLocalPlayerHp] = useState<Record<string, number>>({});
+  const [localEnemyHp, setLocalEnemyHp] = useState<Record<string, number>>({});
 
   const battleContainerRef = useRef<HTMLDivElement>(null);
   const mountedAt = useRef(Date.now());
@@ -40,9 +42,11 @@ export function BattleScreen() {
   phaseRef.current = phase;
   const pendingActionsRef = useRef<{ cardId: string; action: string; targetId: string; skillId?: string }[]>([]);
 
-  const alivePlayerCards = useMemo(() => playerBattleCards.filter((c) => c.currentHp > 0), [playerBattleCards]);
-  const actionablePlayerCards = useMemo(() => playerBattleCards.filter((c) => c.currentHp > 0 && !c.skipNextTurn), [playerBattleCards]);
-  const aliveEnemyCards = useMemo(() => enemyBattleCards.filter((c) => c.currentHp > 0), [enemyBattleCards]);
+  const getLocalPlayerHp = (c: BattleCardState) => localPlayerHp[c.uid ?? c.cardId] ?? c.currentHp;
+  const getLocalEnemyHp = (c: BattleCardState) => localEnemyHp[c.uid ?? c.cardId] ?? c.currentHp;
+  const alivePlayerCards = useMemo(() => playerBattleCards.filter((c) => getLocalPlayerHp(c) > 0), [playerBattleCards, localPlayerHp]);
+  const actionablePlayerCards = useMemo(() => playerBattleCards.filter((c) => getLocalPlayerHp(c) > 0 && !c.skipNextTurn), [playerBattleCards, localPlayerHp]);
+  const aliveEnemyCards = useMemo(() => enemyBattleCards.filter((c) => getLocalEnemyHp(c) > 0), [enemyBattleCards, localEnemyHp]);
 
   // Reset state when cards change (battle start/new turn)
   useEffect(() => {
@@ -305,6 +309,14 @@ export function BattleScreen() {
   async function submitTurn() {
     const actions = [...pendingActionsRef.current];
     pendingActionsRef.current = [];
+
+    setLocalPlayerHp(Object.fromEntries(
+      playerBattleCards.map(c => [c.uid ?? c.cardId, c.currentHp])
+    ));
+    setLocalEnemyHp(Object.fromEntries(
+      enemyBattleCards.map(c => [c.uid ?? c.cardId, c.currentHp])
+    ));
+
     newLogStartRef.current = battleLog.length;
     setPhase('resolving');
     setCurrentLogIdx(newLogStartRef.current - 1);
@@ -319,7 +331,13 @@ export function BattleScreen() {
     if (battleLog.length === 0) return;
 
     if (currentLogIdx >= battleLog.length - 1) {
-      // All logs shown
+      // All logs shown — sync local HP with final store values
+      setLocalPlayerHp(Object.fromEntries(
+        playerBattleCards.map(c => [c.uid ?? c.cardId, c.currentHp])
+      ));
+      setLocalEnemyHp(Object.fromEntries(
+        enemyBattleCards.map(c => [c.uid ?? c.cardId, c.currentHp])
+      ));
       if (battleWinner) {
         const timer = setTimeout(() => {
           stopBGM();
@@ -392,6 +410,19 @@ export function BattleScreen() {
       play('defend');
     } else {
       play('attackHit');
+    }
+
+    // Apply damage to local HP in sync with this log entry
+    if (entry.damage > 0) {
+      const targetKey = entry.targetUid ?? entry.targetId;
+      setLocalPlayerHp(prev => {
+        if (targetKey in prev) return { ...prev, [targetKey]: Math.max(0, prev[targetKey] - entry.damage) };
+        return prev;
+      });
+      setLocalEnemyHp(prev => {
+        if (targetKey in prev) return { ...prev, [targetKey]: Math.max(0, prev[targetKey] - entry.damage) };
+        return prev;
+      });
     }
 
     const targetCardEl = entry.damage > 0 ? document.getElementById(`battle-card-${entry.targetId}`) : null;
@@ -527,7 +558,6 @@ export function BattleScreen() {
         overflow: 'hidden',
       }}
     >
-      <WalletWidget />
       <style>{`
         @keyframes battleGlowPulse {
           0%, 100% { filter: brightness(1); }
@@ -594,9 +624,15 @@ export function BattleScreen() {
         </div>
       </div>
 
+      {/* Middle section: enemy cards + log + player cards (flexes to fill space) */}
+      <div style={{
+        flex: 1, overflow: 'hidden',
+        display: 'flex', flexDirection: 'column',
+      }}>
+
       {/* Enemy cards */}
       <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center',
         padding: '1.25rem 1.5rem 0.75rem', position: 'relative', zIndex: 10,
       }}>
         <span style={{
@@ -613,8 +649,9 @@ export function BattleScreen() {
             <MiniBattleCard
               key={card.cardId}
               card={card}
-              isAlive={card.currentHp > 0}
+              isAlive={(localEnemyHp[card.uid ?? card.cardId] ?? card.currentHp) > 0}
               isActive={phase !== 'player_turn' && card.uid === activeCardSpec?.uid}
+              overrideHp={localEnemyHp[card.uid ?? card.cardId]}
             />
           ))}
         </div>
@@ -622,10 +659,11 @@ export function BattleScreen() {
 
       {/* Battle announcements — centered */}
       <div style={{
-        flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
         position: 'relative', zIndex: 10,
         padding: '1rem 1.5rem',
         minHeight: '120px',
+        overflow: 'hidden',
       }}>
         {currentLogIdx >= 0 && currentLogIdx < battleLog.length && currentLogIdx >= newLogStartRef.current ? (
           (() => {
@@ -698,16 +736,20 @@ export function BattleScreen() {
             <MiniBattleCard
               key={card.cardId}
               card={card}
-              isAlive={card.currentHp > 0}
+              isAlive={(localPlayerHp[card.uid ?? card.cardId] ?? card.currentHp) > 0}
               isActive={phase === 'player_turn' ? card === currentCard : card.uid === activeCardSpec?.uid}
+              overrideHp={localPlayerHp[card.uid ?? card.cardId]}
             />
           ))}
         </div>
       </div>
 
+      </div>{/* end middle section */}
+
       {/* Action menu / Result */}
       {phase !== 'result' && (
         <div style={{
+          flexShrink: 0,
           borderTop: '2px solid rgba(59,130,246,0.25)',
           background: 'rgba(12,12,25,0.95)',
           boxShadow: '0 -8px 32px rgba(0,0,0,0.4)',
@@ -871,12 +913,15 @@ function MiniBattleCard({
   card,
   isAlive,
   isActive,
+  overrideHp,
 }: {
   card: BattleCardState;
   isAlive: boolean;
   isActive?: boolean;
+  overrideHp?: number;
 }) {
-  const hpPercent = card.currentHp / card.maxHp;
+  const hp = overrideHp ?? card.currentHp;
+  const hpPercent = hp / card.maxHp;
   const manaPercent = card.currentMana / card.maxMana;
 
   return (
@@ -918,7 +963,7 @@ function MiniBattleCard({
         }} />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '0.625rem', color: '#d1d5db', fontWeight: 600 }}>
-        <span>HP {Math.max(0, card.currentHp)}/{card.maxHp}</span>
+        <span>HP {Math.max(0, hp)}/{card.maxHp}</span>
         <span style={{ color: '#60a5fa' }}>SPD {card.stats.speed}</span>
       </div>
       {/* Mana bar */}
